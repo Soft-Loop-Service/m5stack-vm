@@ -83,6 +83,7 @@ void loop()
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 0);
     receivedData.clear(); // データをクリア
+    outout_debug_clear(); // デバッグ情報をクリア
   }
   if (M5.BtnC.wasPressed())
   {
@@ -91,6 +92,7 @@ void loop()
 
     // パーサーを実行
     Parser::ParserSystem *parser = new Parser::ParserSystem(receivedData);
+    parser->parser();
   }
   M5.update(); // M5Stackのボタン処理
 }

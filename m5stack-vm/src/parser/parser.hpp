@@ -16,8 +16,8 @@ namespace Parser
         Bytecode::opcr opecode;
         vstring operand_list;
         StackSystem();
-        StackSystem::StackSystem(Bytecode::opcr opecode, vstring operand_list);
-        StackSystem::StackSystem(vstring operand_list);
+        StackSystem(Bytecode::opcr opecode, vstring operand_list);
+        StackSystem(vstring operand_list);
     };
 
     class LocalVariable // ローカル変数
@@ -74,8 +74,11 @@ namespace Parser
         ParserSystem();
         ParserSystem(SourceCode rd);
         ~ParserSystem();
+
         int getProgramInt(int line, int column);
         String getProgram(int line, int column);
+
+        bool hasProgram(int line, int column);
         Bytecode::opcr getProgramOpecode(int line, int column);
         void parser();
     };

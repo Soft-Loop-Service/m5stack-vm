@@ -4,10 +4,8 @@
 #include "./bytecode_definition.hpp"
 namespace Bytecode
 {
-    typedef unsigned int opcr;
     namespace Opecode
     {
-
         const std::map<String, opcr> type_map = {
             {"int", d_int},
             {"str", d_str},

@@ -139,16 +139,32 @@ namespace Parser
     {
     }
 
+    bool ParserSystem::hasProgram(int line, int column)
+    {
+        if (line >= received_data.size())
+        {
+            // output_debug("Error: Line is out of range.");
+            return false;
+        }
+        if (column >= received_data[line].size())
+        {
+            // output_debug("Error: Column is out of range.");
+            return false;
+        }
+
+        return true;
+    }
+
     Bytecode::opcr ParserSystem::getProgramOpecode(int line, int column)
     {
         if (line >= received_data.size())
         {
-            output_debug("Error: Line is out of range.");
+            // output_debug("Error: Line is out of range.");
             return -1;
         }
         if (column >= received_data[line].size())
         {
-            output_debug("Error: Column is out of range.");
+            // output_debug("Error: Column is out of range.");
             return -1;
         }
 
@@ -159,12 +175,12 @@ namespace Parser
     {
         if (line >= received_data.size())
         {
-            output_debug("Error: Line is out of range.");
+            // output_debug("Error: Line is out of range.");
             return -1;
         }
         if (column >= received_data[line].size())
         {
-            output_debug("Error: Column is out of range.");
+            // output_debug("Error: Column is out of range.");
             return -1;
         }
 
@@ -175,12 +191,12 @@ namespace Parser
     {
         if (line >= received_data.size())
         {
-            output_debug("Error: Line is out of range.");
+            // output_debug("Error: Line is out of range.");
             return String("");
         }
         if (column >= received_data[line].size())
         {
-            output_debug("Error: Column is out of range.");
+            // output_debug("Error: Column is out of range.");
             return String("");
         }
 
@@ -193,36 +209,65 @@ namespace Parser
         // シリアル通信により、すべて送られているか不安要素がある
         // ループ回数がある程度多くてもいいので、都度確認していく
 
-        bool start_flag = false;
-        bool end_flag = false;
+        int start_flag_latest_line = -1;
+        int end_flag_first_line = -1;
 
         // 不完全ではないか確認
         for (int i = 0; i < received_data.size(); i++)
         {
+            if (!hasProgram(i, 0))
+            {
+                continue;
+            }
+
             if (getProgram(i, 0) == String(Bytecode::Opecode::program_start))
             {
-                start_flag = true;
+                start_flag_latest_line = i;
             }
-            if (getProgram(i, 0) == String(Bytecode::Opecode::program_end))
+            if (start_flag_latest_line >= 0 && getProgram(i, 0) == String(Bytecode::Opecode::program_end))
             {
-                end_flag = true;
+                end_flag_first_line = i;
+                break;
             }
         }
 
-        if (!start_flag || !end_flag)
+        if (!(start_flag_latest_line >= 0) || !(end_flag_first_line >= 0))
         {
             output_debug("Error: Program is not complete.");
             return;
         }
         else
         {
-            output_debug("Program is complete.");
+            output_debug("Program is complete.", {start_flag_latest_line, end_flag_first_line});
         }
 
-        // ローカルスコープの作成
+        // ここから
+        SourceCode received_data_copy = {};
 
         for (int i = 0; i < received_data.size(); i++)
         {
+            if (start_flag_latest_line < i && i < end_flag_first_line)
+            {
+                if (!hasProgram(i, 0))
+                {
+                    continue;
+                }
+
+                String f = getProgram(i, 0);
+                if (f[0] == '#' || f == "#")
+                { // コメントアウト
+                    continue;
+                }
+
+                received_data_copy.push_back(received_data[i]);
+            }
+        }
+
+        received_data = received_data_copy;
+
+        for (int i = 0; i < received_data.size(); i++)
+        {
+
             if (getProgramOpecode(i, 0) == Bytecode::Opecode::head_value_definition)
             {
                 int local_stack_index = getProgramInt(i, 1);
@@ -236,25 +281,24 @@ namespace Parser
                     local_scope[parent_index].addChildren(local_stack_index);
                 }
 
-                for (int j = 5; j < received_data[i].size(); i += 2)
+                for (int j = 5; j < received_data[i].size(); j += 2)
                 {
                     Bytecode::opcr type = getDec(getProgram(i, j));
                     int variable_unique_id = getProgramInt(i, j + 1);
                     local_scope[local_stack_index].addLocalVariable(type, variable_unique_id);
                 }
 
-                output_debug("Local scope", {local_stack_index, scope_type, directly_index, parent_index});
+                output_debug("Local scope", {i, local_stack_index, scope_type, directly_index, parent_index});
             }
         }
 
-        output_debug("Local scope is created.");
+        output_debug("Local scope is created.", local_scope.size());
 
         int local_stack_index = 0;
         bool inside_flag = false;
         // バイトコードの全移設
         for (int i = 0; i < received_data.size(); i++)
         {
-
             if (getProgramOpecode(i, 0) == Bytecode::Opecode::head_start_function ||
                 getProgramOpecode(i, 0) == Bytecode::Opecode::head_start_class)
             {
@@ -270,20 +314,11 @@ namespace Parser
                 continue;
             }
 
-            if (received_data[i].size() > 0)
-            {
-                String f = received_data[i][0];
-                if (f == "#")
-                { // コメントアウト
-                    continue;
-                }
-            }
-
             if (inside_flag)
             {
                 local_scope[local_stack_index].addByteCode(ByteCodeLine(received_data[i]));
             }
         }
-        output_debug("Bytecode inport is created.");
+        output_debug("Bytecode import is created.");
     }
 };
