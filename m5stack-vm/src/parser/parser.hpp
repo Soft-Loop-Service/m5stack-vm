@@ -54,7 +54,7 @@ namespace Parser
     Bytecode::opcr getDec(std::string hexStr);
     class StackSystem // スタックシステム
     {
-        std::vector<LocalVariable> stack_system;
+        std::vector<LocalVariable> stack;
 
     public:
         StackSystem() = default;
@@ -100,11 +100,75 @@ namespace Parser
             {Bytecode::Opecode::d_boolean, BOOLEAN}};
 
         Bytecode::opcr type;
-        int variable_unique_id;
 
-        LocalVariable() : store_type(INT), intValue(0), type(0), variable_unique_id(0) {};
-        LocalVariable(Bytecode::opcr, int); // type variable_unique_id
+        LocalVariable() : store_type(INT), intValue(0), type(0) {};
+        LocalVariable(Bytecode::opcr);
         ~LocalVariable() { clear(); }
+
+        void setValueAnalysis(vstring args)
+        {
+            clear();
+            switch (store_type_map[type])
+            {
+            case INT:
+            {
+                vectorIntValue = new vint();
+
+                for (int i = 0; i < args.size(); i++)
+                {
+                    vectorIntValue->push_back(args[i].toInt());
+                }
+
+                break;
+            }
+
+            case FLOAT:
+            {
+                vectorIntValue = new vint();
+
+                for (int i = 0; i < args.size(); i++)
+                {
+                    vectorIntValue->push_back(args[i].toFloat());
+                }
+
+                break;
+            }
+
+            case STRING:
+            {
+                vectorStringValue = new vstring();
+
+                for (int i = 0; i < args.size(); i++)
+                {
+                    vectorStringValue->push_back(args[i]);
+                }
+
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+        void setValueAnalysis(String arg)
+        {
+            clear();
+            switch (store_type_map[type])
+            {
+            case INT:
+                intValue = arg.toInt();
+                break;
+            case FLOAT:
+                floatValue = arg.toFloat();
+                break;
+            case BOOLEAN:
+                booleanValue = arg == "true";
+                break;
+            case STRING:
+                stringValue = new String(arg);
+                break;
+            }
+        }
 
         void setValue(int value)
         {
@@ -127,30 +191,55 @@ namespace Parser
             booleanValue = value;
         }
 
-        void setValue(const String &value)
+        void setValue(const String value)
         {
             clear();
             type = STRING;
             stringValue = new String(value);
         }
 
-        void setValue(const vint &value)
+        void setValue(const vint value)
         {
             clear();
             type = VINT;
             vectorIntValue = new vint(value);
         }
 
-        void setValue(const vstring &value)
+        void setValue(const vstring value)
         {
             clear();
             type = VSTRING;
             vectorStringValue = new vstring(value);
         }
 
-        void getValue(ValueType &value) const
+        int getValueInt() const
         {
-            value = store_type;
+            return intValue;
+        }
+
+        float getValueFloat() const
+        {
+            return floatValue;
+        }
+
+        bool getValueBoolean() const
+        {
+            return booleanValue;
+        }
+
+        String getValueString() const
+        {
+            return *stringValue;
+        }
+
+        vint getValueVInt() const
+        {
+            return *vectorIntValue;
+        }
+
+        vstring getValueVString() const
+        {
+            return *vectorStringValue;
         }
 
         Bytecode::opcr getType() const
@@ -219,15 +308,24 @@ namespace Parser
 
         Bytecode::opcr getOpecode();
         int getOperandListSize();
+
         vstring getOperandList();
-        String getOperand(int index);
+
+        Bytecode::opcr getOperandType();
+
+        // index
+        Bytecode::opcr getOperandType(int);
+        int getOperandInt(int);
+
+        // index
+        String getOperand(int);
     };
 
     class LocalScope // ローカルスコープ 木構造
     {
         std::vector<ByteCodeLine> byte_code;
         vint children;
-        std::vector<LocalVariable> local_variable;
+        std::map<int, LocalVariable> local_variable;
         int index;
         int scope_type;
         int directly_index;
@@ -242,7 +340,12 @@ namespace Parser
 
         std::vector<ByteCodeLine> getByteCode();
         vint getChildren();
-        std::vector<LocalVariable> getLocalVariable();
+        std::map<int, LocalVariable> getLocalVariableList();
+        LocalVariable LocalScope::getLocalVariable(int);
+
+        void setLocalVariableList(std::map<int, LocalVariable>);
+        void setLocalVariable(int, LocalVariable);
+
         int getIndex();
         int getScopeType();
         int getDirectlyIndex();

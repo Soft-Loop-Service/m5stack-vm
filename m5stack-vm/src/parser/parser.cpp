@@ -16,10 +16,9 @@ namespace Parser
         return decimalValue;      // unsigned intに変換
     };
 
-    LocalVariable::LocalVariable(Bytecode::opcr type, int variable_unique_id)
+    LocalVariable::LocalVariable(Bytecode::opcr type)
     {
         this->type = type;
-        this->variable_unique_id = variable_unique_id;
         this->store_type = store_type_map[type];
     }
 
@@ -44,9 +43,9 @@ namespace Parser
         children.push_back(index);
     }
 
-    void LocalScope::addLocalVariable(Bytecode::opcr type, int variable_unique_id)
+    void LocalScope::addLocalVariable(Bytecode::opcr type, int directly_index)
     {
-        local_variable.push_back(LocalVariable(type, variable_unique_id));
+        local_variable[directly_index] = (LocalVariable(type));
     }
 
     void LocalScope::addByteCode(ByteCodeLine byte_code_line)
@@ -61,10 +60,24 @@ namespace Parser
     {
         return children;
     }
-    std::vector<LocalVariable> LocalScope::getLocalVariable()
+    std::map<int, LocalVariable> LocalScope::getLocalVariableList()
     {
         return local_variable;
     }
+    LocalVariable LocalScope::getLocalVariable(int directly_index)
+    {
+        return local_variable[directly_index];
+    }
+
+    void LocalScope::setLocalVariableList(std::map<int, LocalVariable> lv)
+    {
+        local_variable = lv;
+    }
+    void LocalScope::setLocalVariable(int directly_index, LocalVariable lv)
+    {
+        local_variable[directly_index] = lv;
+    }
+
     int LocalScope::getIndex()
     {
         return index;
@@ -84,34 +97,40 @@ namespace Parser
 
     void StackSystem::push(LocalVariable local_variable)
     {
-        stack_system.push_back(local_variable);
+        stack.push_back(local_variable);
     }
 
     LocalVariable StackSystem::pop()
     {
-        LocalVariable local_variable = stack_system.back();
-        stack_system.pop_back();
+        if (stack.size() == 0)
+        {
+            output_debug("Error: Stack is empty.");
+            return LocalVariable();
+        }
+
+        LocalVariable local_variable = stack.back();
+        stack.pop_back();
         return local_variable;
     }
 
     LocalVariable StackSystem::getTop()
     {
-        return stack_system.back();
+        return stack.back();
     }
 
     void StackSystem::clear()
     {
-        stack_system.clear();
+        stack.clear();
     }
 
     int StackSystem::size()
     {
-        return stack_system.size();
+        return stack.size();
     }
 
     std::vector<LocalVariable> StackSystem::getStack()
     {
-        return stack_system;
+        return stack;
     }
 
     ByteCodeLine::ByteCodeLine()
@@ -130,15 +149,7 @@ namespace Parser
         if (operand_list.size() > 0)
         {
             this->opecode = getDec(operand_list[0]);
-
-            if (operand_list.size() > 1)
-            {
-                this->operand_list = {};
-                for (int i = 1; i < operand_list.size(); i++)
-                {
-                    this->operand_list.push_back(operand_list[i]);
-                }
-            }
+            this->operand_list = operand_list;
         }
     }
 
@@ -156,7 +167,33 @@ namespace Parser
     {
         return operand_list;
     }
+    Bytecode::opcr ByteCodeLine::getOperandType()
+    {
+        int index = 1;
+        if (index >= operand_list.size())
+        {
+            return Bytecode::Opecode::value_null;
+        }
+        return operand_list[index].toInt();
+    }
 
+    Bytecode::opcr ByteCodeLine::getOperandType(int index)
+    {
+        if (index >= operand_list.size())
+        {
+            return Bytecode::Opecode::value_null;
+        }
+        return operand_list[index].toInt();
+    }
+
+    int ByteCodeLine::getOperandInt(int index)
+    {
+        if (index >= operand_list.size())
+        {
+            return -1;
+        }
+        return operand_list[index].toInt();
+    }
     String ByteCodeLine::getOperand(int index)
     {
         if (index >= operand_list.size())
@@ -389,11 +426,16 @@ namespace Parser
         for (auto itr = local_scope.begin(); itr != local_scope.end(); ++itr)
         {
             output_debug("-    Local Scope", {itr->first, itr->second.getIndex(), itr->second.getScopeType(), itr->second.getDirectlyIndex(), itr->second.getParentIndex()});
-            for (int i = 0; i < itr->second.getLocalVariable().size(); i++)
+            // for (int i = 0; i < itr->second.getLocalVariable().size(); i++)
+            // {
+            //     output_debug("-        Local Variable VALUE : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].getCastString()});
+            //     output_debug("-        Local Variable ID___ : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].directly_index});
+            // }
+            for (auto itr2 = itr->second.getLocalVariableList().begin(); itr2 != itr->second.getLocalVariableList().end(); ++itr2)
             {
-                output_debug("-        Local Variable VALUE : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].getCastString()});
-                output_debug("-        Local Variable ID___ : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].variable_unique_id});
+                output_debug("-        Local Variable VALUE : ", {String(itr2->first), String(itr2->second.type), itr2->second.getCastString()});
             }
+
             for (int i = 0; i < itr->second.getByteCode().size(); i++)
             {
                 output_debug("-        ByteCode", {itr->second.getByteCode()[i].getOpecode()});

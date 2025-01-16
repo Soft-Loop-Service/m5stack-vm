@@ -24,6 +24,7 @@ namespace Bytecode
 
         const opcr bool_false = 0;
         const opcr bool_true = 1;
+        const opcr value_null = 2;
 
         // ******
 
