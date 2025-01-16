@@ -6,7 +6,7 @@
 
 namespace Bytecode
 {
-    typedef unsigned int opcr;
+    typedef int opcr;
     namespace Opecode
     {
         const opcr d_int = 100;
@@ -19,16 +19,16 @@ namespace Bytecode
         const opcr d_class = 800;    // クラスやコンポーネントなど、インスタンス化できるもの。
         const opcr d_boolean = 900;
 
-        opcr resolvOpecrType(String type, vstring token_class_type);
-        opcr resolvOpecrType(String type);
+        // opcr resolvOpecrType(String type, vstring token_class_type);
+        // opcr resolvOpecrType(String type);
 
         const opcr bool_false = 0;
         const opcr bool_true = 1;
 
         // stack関連
-        const opcr push = 10; // スタックに数値もしくは文字列を積む 第2引数は型 第3引数は値
+        const opcr push = 10; // スタックに数値もしくは文字列を積む 第1引数は型 第2引数は値
 
-        const opcr push_function = 11; // 関数をスタックに積む 第2引数は関数のインデックス
+        const opcr push_function = 11; // 関数をスタックに積む 第1引数は関数のインデックス
 
         const opcr pop = 15; // スタックから削除。ただしどこにも記録しない。
 
@@ -51,13 +51,13 @@ namespace Bytecode
         // ローカル変数関連
 
         // オペランドスタック → ローカル変数
-        // 第2引数は型
-        // 第3引数はローカル変数のインデックス (格納先)
+        // 第1引数は型
+        // 第2引数はローカル変数のインデックス (格納先)
         const opcr s_store = 30;
 
         // ローカル変数 → オペランドスタック
-        // 第2引数は型
-        // 第3引数はローカル変数のインデックス
+        // 第1引数は型
+        // 第2引数はローカル変数のインデックス
         const opcr s_load = 40;
 
         const opcr s_jump = 50;        // 第2引数はラベルID
@@ -69,7 +69,7 @@ namespace Bytecode
         const opcr c_division = 103;
 
         // 比較
-        // 第二引数はfalse label ID
+        // 第1引数はfalse label ID
         const opcr s_if_acmpeq = 111; //== (オブジェクト参照)
         const opcr s_if_acmpne = 112; //!= (オブジェクト参照)
         const opcr s_if_icmpeq = 113; // ==
@@ -81,12 +81,20 @@ namespace Bytecode
         const opcr s_if_true = 120;
         const opcr s_if_false = 121;
 
+        // 第1引数は directly_index
         const opcr head_start_function = 240;
         const opcr head_end_function = 241;
+
+        // 第1引数は directly_index
         const opcr head_start_class = 242;
         const opcr head_end_class = 243;
 
-        const opcr head_value_definition = 244; // 第2引数はlocal_stack index 第3引数は directly_index 第4引数以降変数のインデックス
+        // 第1引数 local_stack index
+        // 第2引数 scope_type
+        // 第3引数 directly_index
+        // 第4引数 parent_index
+        // 第5引数 以降変数のインデックス(TYPE,D_INDEX)
+        const opcr head_value_definition = 244;
 
         const opcr program_start = 250;
         const opcr program_end = 251;

@@ -3,8 +3,9 @@
 #include <string>
 #include "./definition.hpp"
 #include "./parser/parser.hpp"
+#include "./debug.hpp"
 // データを記録する配列
-SourceCode receivedData;
+SourceCode receivedData = {};
 
 void setup()
 {
@@ -69,11 +70,12 @@ void loop()
     M5.Lcd.printf("Recorded Data:");
     for (const auto &line : receivedData)
     {
+      String output = "";
       for (const auto &item : line)
       {
-        M5.Lcd.print(item + " ");
+        output += item + " ";
       }
-      M5.Lcd.println();
+      output_debug(output);
     }
   }
   if (M5.BtnB.wasPressed())
@@ -86,7 +88,9 @@ void loop()
   {
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 0);
-    Parser::parser(receivedData); // パーサーを呼び出す
+
+    // パーサーを実行
+    Parser::ParserSystem *parser = new Parser::ParserSystem(receivedData);
   }
   M5.update(); // M5Stackのボタン処理
 }
