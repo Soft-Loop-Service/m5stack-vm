@@ -36,6 +36,12 @@ try:
                 print("Exiting...")
                 break
 
+            if user_input.startswith("##"):
+                ser.write(user_input.encode('utf-8'))
+                ser.write("\n".encode('utf-8'))
+                print(f"Sent directly: {user_input}")
+                continue
+
             # "input" コマンドの処理
             if user_input.startswith("input "):
                 # ファイル名を抽出

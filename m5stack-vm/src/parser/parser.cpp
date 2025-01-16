@@ -6,8 +6,7 @@ namespace Parser
     Bytecode::opcr getDec(String hexStr)
     {
         unsigned int decimalValue;
-        std::stringstream t;
-        t >> decimalValue; // unsigned intに変換
+        decimalValue = hexStr.toInt();
         return decimalValue;
 
         std::stringstream ss;
@@ -56,6 +55,34 @@ namespace Parser
     {
         byte_code.push_back(byte_code_line);
     }
+    std::vector<ByteCodeLine> LocalScope::getByteCode()
+    {
+        return byte_code;
+    }
+    vint LocalScope::getChildren()
+    {
+        return children;
+    }
+    std::vector<LocalVariable> LocalScope::getLocalVariable()
+    {
+        return local_variable;
+    }
+    int LocalScope::getIndex()
+    {
+        return index;
+    }
+    int LocalScope::getScopeType()
+    {
+        return scope_type;
+    }
+    int LocalScope::getDirectlyIndex()
+    {
+        return directly_index;
+    }
+    int LocalScope::getParentIndex()
+    {
+        return parent_index;
+    }
 
     StackSystem::StackSystem()
     {
@@ -78,8 +105,8 @@ namespace Parser
 
     ByteCodeLine::ByteCodeLine()
     {
-        opecode = 0;
-        operand_list = {};
+        this->opecode = 0;
+        this->operand_list = {};
     }
     ByteCodeLine::ByteCodeLine(Bytecode::opcr opecode, vstring operand_list)
     {
@@ -137,6 +164,13 @@ namespace Parser
     }
     ParserSystem::~ParserSystem()
     {
+    }
+
+    void ParserSystem::refresh(SourceCode rd)
+    {
+        received_data = rd;
+        local_scope = {};
+        stack_system = {};
     }
 
     bool ParserSystem::hasProgram(int line, int column)
@@ -320,5 +354,39 @@ namespace Parser
             }
         }
         output_debug("Bytecode import is created.");
+    }
+
+    void ParserSystem::all_output_local_scope()
+    {
+        output_debug("* * * * * * all output local scope * * * * * * ");
+        for (auto itr = local_scope.begin(); itr != local_scope.end(); ++itr)
+        {
+            output_debug("-    Local Scope", {itr->first, itr->second.getIndex(), itr->second.getScopeType(), itr->second.getDirectlyIndex(), itr->second.getParentIndex()});
+            for (int i = 0; i < itr->second.getLocalVariable().size(); i++)
+            {
+                output_debug("-        Local Variable", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].variable_unique_id});
+            }
+            for (int i = 0; i < itr->second.getByteCode().size(); i++)
+            {
+                output_debug("-        ByteCode", {itr->second.getByteCode()[i].getOpecode()});
+                for (int j = 0; j < itr->second.getByteCode()[i].getOperandList().size(); j++)
+                {
+                    output_debug({"-            Operand", itr->second.getByteCode()[i].getOperand(j)});
+                }
+            }
+        }
+    }
+
+    void ParserSystem::all_output_stack_system()
+    {
+        output_debug("* * * * * * all output stack system * * * * * * ");
+        for (int i = 0; i < stack_system.size(); i++)
+        {
+            output_debug("-    Stack System", {stack_system[i].opecode});
+            for (int j = 0; j < stack_system[i].operand_list.size(); j++)
+            {
+                output_debug({"-        Operand", stack_system[i].operand_list[j]});
+            }
+        }
     }
 };

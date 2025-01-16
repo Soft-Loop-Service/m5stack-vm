@@ -60,6 +60,14 @@ namespace Parser
         void addChildren(int index);
         void addLocalVariable(Bytecode::opcr type, int variable_unique_id);
         void addByteCode(ByteCodeLine byte_code_line);
+
+        std::vector<ByteCodeLine> getByteCode();
+        vint getChildren();
+        std::vector<LocalVariable> getLocalVariable();
+        int getIndex();
+        int getScopeType();
+        int getDirectlyIndex();
+        int getParentIndex();
     };
 
     class ParserSystem
@@ -75,12 +83,18 @@ namespace Parser
         ParserSystem(SourceCode rd);
         ~ParserSystem();
 
+        void refresh(SourceCode rd);
+
         int getProgramInt(int line, int column);
         String getProgram(int line, int column);
 
         bool hasProgram(int line, int column);
         Bytecode::opcr getProgramOpecode(int line, int column);
+
         void parser();
+
+        void all_output_local_scope();
+        void all_output_stack_system();
     };
 };
 
