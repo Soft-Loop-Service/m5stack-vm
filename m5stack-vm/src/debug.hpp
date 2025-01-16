@@ -9,4 +9,5 @@ void output_debug(String, int);
 void output_debug(String);
 void outout_debug_clear();
 void output_debug_common();
+void send_debug_message(String);
 #endif
