@@ -25,6 +25,8 @@ namespace Bytecode
         const opcr bool_false = 0;
         const opcr bool_true = 1;
 
+        // ******
+
         // stack関連
         const opcr push = 10; // スタックに数値もしくは文字列を積む 第1引数は型 第2引数は値
 
@@ -78,6 +80,8 @@ namespace Bytecode
         const opcr s_if_icmpgt = 116; // >
         const opcr s_if_icmple = 117; // <=
         const opcr s_if_icmplt = 118; // <
+
+        // スタックトップにある値がtrueかfalseかで分岐
         const opcr s_if_true = 120;
         const opcr s_if_false = 121;
 
@@ -95,6 +99,9 @@ namespace Bytecode
         // 第4引数 parent_index
         // 第5引数 以降変数のインデックス(TYPE,D_INDEX)
         const opcr head_value_definition = 244;
+
+        const opcr head_start_global_scope = 245;
+        const opcr head_end_global_scope = 246;
 
         const opcr program_start = 250;
         const opcr program_end = 251;

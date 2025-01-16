@@ -4,31 +4,209 @@
 
 #include "./../bytecode_definition.hpp"
 #include <sstream>
-
 // フラットパーサー
 
 namespace Parser
 {
+    template <typename T>
+    class Store
+    {
+        std::map<int, T> store;
+        int unique_id = 0;
+
+        int getUniqueId()
+        {
+            return ++unique_id;
+        }
+
+    public:
+        Store() = default;
+
+        int setValue(int id, const T &value)
+        {
+            store[id] = value;
+            return id;
+        }
+
+        int setValue(const T &value)
+        {
+            int id = getUniqueId();
+            store[id] = value;
+            return id;
+        }
+
+        T getValue(int id) const
+        {
+            return store.at(id);
+        }
+
+        void clear()
+        {
+            store.clear();
+        }
+
+        bool hasValue(int id) const
+        {
+            return store.find(id) != store.end();
+        }
+    };
+
     Bytecode::opcr getDec(std::string hexStr);
     class StackSystem // スタックシステム
     {
+        std::vector<LocalVariable> stack_system;
+
     public:
-        Bytecode::opcr opecode;
-        vstring operand_list;
-        StackSystem();
-        StackSystem(Bytecode::opcr opecode, vstring operand_list);
-        StackSystem(vstring operand_list);
+        StackSystem() = default;
+        void push(LocalVariable local_variable);
+        LocalVariable pop();
+        LocalVariable getTop();
+        void clear();
+        int size();
+        std::vector<LocalVariable> getStack();
     };
 
-    class LocalVariable // ローカル変数
+    class LocalVariable
     {
     public:
+        enum ValueType
+        {
+            INT,
+            FLOAT,
+            BOOLEAN,
+            STRING,
+            VINT,
+            VSTRING
+        } store_type;
+        union
+        {
+            int intValue;
+            float floatValue;
+            bool booleanValue;
+            String *stringValue;
+            vint *vectorIntValue;
+            vstring *vectorStringValue;
+        };
+
+        std::map<Bytecode::opcr, ValueType> store_type_map = {
+            {Bytecode::Opecode::d_int, INT},
+            {Bytecode::Opecode::d_float, FLOAT},
+            {Bytecode::Opecode::d_str, STRING},
+            {Bytecode::Opecode::d_pointer, VINT},
+            {Bytecode::Opecode::d_reference, VINT},
+            {Bytecode::Opecode::d_html_dom, STRING},
+            {Bytecode::Opecode::d_function, INT},
+            {Bytecode::Opecode::d_class, INT},
+            {Bytecode::Opecode::d_boolean, BOOLEAN}};
+
         Bytecode::opcr type;
         int variable_unique_id;
-        LocalVariable();
-        LocalVariable(Bytecode::opcr type, int namevariable_unique_id);
-    };
 
+        LocalVariable() : store_type(INT), intValue(0), type(0), variable_unique_id(0) {};
+        LocalVariable(Bytecode::opcr, int); // type variable_unique_id
+        ~LocalVariable() { clear(); }
+
+        void setValue(int value)
+        {
+            clear();
+            type = INT;
+            intValue = value;
+        }
+
+        void setValue(float value)
+        {
+            clear();
+            type = FLOAT;
+            floatValue = value;
+        }
+
+        void setValue(bool value)
+        {
+            clear();
+            type = BOOLEAN;
+            booleanValue = value;
+        }
+
+        void setValue(const String &value)
+        {
+            clear();
+            type = STRING;
+            stringValue = new String(value);
+        }
+
+        void setValue(const vint &value)
+        {
+            clear();
+            type = VINT;
+            vectorIntValue = new vint(value);
+        }
+
+        void setValue(const vstring &value)
+        {
+            clear();
+            type = VSTRING;
+            vectorStringValue = new vstring(value);
+        }
+
+        void getValue(ValueType &value) const
+        {
+            value = store_type;
+        }
+
+        Bytecode::opcr getType() const
+        {
+            return type;
+        }
+
+        String getCastString() const
+        {
+            switch (store_type)
+            {
+            case INT:
+                return String(intValue);
+            case FLOAT:
+                return String(floatValue);
+            case BOOLEAN:
+                return booleanValue ? "true" : "false";
+            case STRING:
+                return *stringValue;
+            case VINT:
+            {
+                String rv;
+                for (int i = 0; i < vectorIntValue->size(); i++)
+                {
+                    rv += String((*vectorIntValue)[i]);
+                    if (i != vectorIntValue->size() - 1)
+                        rv += ",";
+                }
+                return rv;
+            }
+            case VSTRING:
+            {
+                String rv;
+                for (int i = 0; i < vectorStringValue->size(); i++)
+                {
+                    rv += (*vectorStringValue)[i];
+                    if (i != vectorStringValue->size() - 1)
+                        rv += ",";
+                }
+                return rv;
+            }
+            default:
+                return "unknown";
+            }
+        }
+
+        void clear()
+        {
+            if (type == STRING)
+                delete stringValue;
+            if (type == VINT)
+                delete vectorIntValue;
+            if (type == VSTRING)
+                delete vectorStringValue;
+        }
+    };
     class ByteCodeLine
     {
         Bytecode::opcr opecode;
@@ -40,6 +218,7 @@ namespace Parser
         ByteCodeLine(vstring operand_list);
 
         Bytecode::opcr getOpecode();
+        int getOperandListSize();
         vstring getOperandList();
         String getOperand(int index);
     };
@@ -76,7 +255,7 @@ namespace Parser
         SourceCode received_data;
 
         std::map<int, LocalScope> local_scope;
-        std::vector<StackSystem> stack_system;
+        StackSystem *stack_system;
 
     public:
         ParserSystem();
@@ -92,6 +271,9 @@ namespace Parser
         Bytecode::opcr getProgramOpecode(int line, int column);
 
         void parser();
+
+        void recursionProcess(int);
+        void process();
 
         void all_output_local_scope();
         void all_output_stack_system();

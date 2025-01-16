@@ -3,6 +3,7 @@
 #include "M5Core2.h"
 namespace Parser
 {
+
     Bytecode::opcr getDec(String hexStr)
     {
         unsigned int decimalValue;
@@ -15,16 +16,13 @@ namespace Parser
         return decimalValue;      // unsigned intに変換
     };
 
-    LocalVariable::LocalVariable()
-    {
-        type = 0;
-        variable_unique_id = 0;
-    }
     LocalVariable::LocalVariable(Bytecode::opcr type, int variable_unique_id)
     {
         this->type = type;
         this->variable_unique_id = variable_unique_id;
+        this->store_type = store_type_map[type];
     }
+
     LocalScope::LocalScope()
     {
         children = {};
@@ -84,23 +82,36 @@ namespace Parser
         return parent_index;
     }
 
-    StackSystem::StackSystem()
+    void StackSystem::push(LocalVariable local_variable)
     {
-        opecode = 0;
-        operand_list = {};
+        stack_system.push_back(local_variable);
     }
-    StackSystem::StackSystem(Bytecode::opcr opecode, vstring operand_list)
+
+    LocalVariable StackSystem::pop()
     {
-        this->opecode = opecode;
-        this->operand_list = operand_list;
+        LocalVariable local_variable = stack_system.back();
+        stack_system.pop_back();
+        return local_variable;
     }
-    StackSystem::StackSystem(vstring operand_list)
+
+    LocalVariable StackSystem::getTop()
     {
-        if (operand_list.size() > 0)
-        {
-            this->opecode = Bytecode::Opecode::push;
-            this->operand_list = operand_list;
-        }
+        return stack_system.back();
+    }
+
+    void StackSystem::clear()
+    {
+        stack_system.clear();
+    }
+
+    int StackSystem::size()
+    {
+        return stack_system.size();
+    }
+
+    std::vector<LocalVariable> StackSystem::getStack()
+    {
+        return stack_system;
     }
 
     ByteCodeLine::ByteCodeLine()
@@ -136,6 +147,11 @@ namespace Parser
         return opecode;
     }
 
+    int ByteCodeLine::getOperandListSize()
+    {
+        return operand_list.size();
+    }
+
     vstring ByteCodeLine::getOperandList()
     {
         return operand_list;
@@ -154,13 +170,13 @@ namespace Parser
     {
         received_data = {};
         local_scope = {};
-        stack_system = {};
+        stack_system = new StackSystem();
     }
     ParserSystem::ParserSystem(SourceCode rd)
     {
         received_data = rd;
         local_scope = {};
-        stack_system = {};
+        stack_system = new StackSystem();
     }
     ParserSystem::~ParserSystem()
     {
@@ -329,7 +345,7 @@ namespace Parser
         output_debug("Local scope is created.", local_scope.size());
 
         int local_stack_index = 0;
-        bool inside_flag = false;
+        bool inside_flag = 0; // 0:外部, 1:関数内/クラス内, 2:グローバルスコープ
         // バイトコードの全移設
         for (int i = 0; i < received_data.size(); i++)
         {
@@ -337,23 +353,34 @@ namespace Parser
                 getProgramOpecode(i, 0) == Bytecode::Opecode::head_start_class)
             {
                 local_stack_index = getProgramInt(i, 1);
-                inside_flag = true;
+                inside_flag = 1;
                 continue;
             }
-            if (getProgramOpecode(i, 0) == Bytecode::Opecode::head_end_function ||
-                getProgramOpecode(i, 0) == Bytecode::Opecode::head_end_class)
+            if (getProgramOpecode(i, 0) == Bytecode::Opecode::head_start_global_scope)
             {
                 local_stack_index = 0;
-                inside_flag = false;
+                inside_flag = 2;
                 continue;
             }
 
-            if (inside_flag)
+            if (getProgramOpecode(i, 0) == Bytecode::Opecode::head_end_function ||
+                getProgramOpecode(i, 0) == Bytecode::Opecode::head_end_class ||
+                getProgramOpecode(i, 0) == Bytecode::Opecode::head_end_global_scope)
+            {
+                local_stack_index = 0;
+                inside_flag = 0;
+                continue;
+            }
+
+            if (inside_flag > 0)
             {
                 local_scope[local_stack_index].addByteCode(ByteCodeLine(received_data[i]));
             }
         }
         output_debug("Bytecode import is created.");
+
+        // バイトコードの実行
+        process();
     }
 
     void ParserSystem::all_output_local_scope()
@@ -364,7 +391,8 @@ namespace Parser
             output_debug("-    Local Scope", {itr->first, itr->second.getIndex(), itr->second.getScopeType(), itr->second.getDirectlyIndex(), itr->second.getParentIndex()});
             for (int i = 0; i < itr->second.getLocalVariable().size(); i++)
             {
-                output_debug("-        Local Variable", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].variable_unique_id});
+                output_debug("-        Local Variable VALUE : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].getCastString()});
+                output_debug("-        Local Variable ID___ : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].variable_unique_id});
             }
             for (int i = 0; i < itr->second.getByteCode().size(); i++)
             {
@@ -380,13 +408,10 @@ namespace Parser
     void ParserSystem::all_output_stack_system()
     {
         output_debug("* * * * * * all output stack system * * * * * * ");
-        for (int i = 0; i < stack_system.size(); i++)
+
+        for (int i = 0; i < stack_system->size(); i++)
         {
-            output_debug("-    Stack System", {stack_system[i].opecode});
-            for (int j = 0; j < stack_system[i].operand_list.size(); j++)
-            {
-                output_debug({"-        Operand", stack_system[i].operand_list[j]});
-            }
+            output_debug("-    Stack System", {String(i), String(stack_system->getStack()[i].type), stack_system->getStack()[i].getCastString()});
         }
     }
 };
