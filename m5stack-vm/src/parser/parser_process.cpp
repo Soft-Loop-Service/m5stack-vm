@@ -135,6 +135,7 @@ namespace Parser
 
             case Bytecode::Opecode::c_add:
             {
+                output_debug("ADD | ", {"ADD VALUE"});
                 LocalVariable local_variable_1 = stack_system->pop();
                 LocalVariable local_variable_2 = stack_system->pop();
 
@@ -153,14 +154,16 @@ namespace Parser
                 {
                     int a = local_variable_1.getValueInt();
                     int b = local_variable_2.getValueInt();
-                    new_local_variable.setValue(a + b);
+                    new_local_variable.setValue(b + a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
                 case Bytecode::Opecode::d_float:
                 {
                     float a = local_variable_1.getValueFloat();
                     float b = local_variable_2.getValueFloat();
-                    new_local_variable.setValue(a + b);
+                    new_local_variable.setValue(b + a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -168,7 +171,8 @@ namespace Parser
                 {
                     String a = local_variable_1.getValueString();
                     String b = local_variable_2.getValueString();
-                    new_local_variable.setValue(a + b);
+                    new_local_variable.setValue(b + a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -176,7 +180,8 @@ namespace Parser
                 {
                     bool a = local_variable_1.getValueBoolean();
                     bool b = local_variable_2.getValueBoolean();
-                    new_local_variable.setValue(a || b);
+                    new_local_variable.setValue(b || a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -187,6 +192,7 @@ namespace Parser
                     vint c = a;
                     c.insert(c.end(), b.begin(), b.end());
                     new_local_variable.setValue(c);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -197,6 +203,7 @@ namespace Parser
                     vstring c = a;
                     c.insert(c.end(), b.begin(), b.end());
                     new_local_variable.setValue(c);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -204,7 +211,8 @@ namespace Parser
                 {
                     String a = local_variable_1.getValueString();
                     String b = local_variable_2.getValueString();
-                    new_local_variable.setValue(a + b);
+                    new_local_variable.setValue(b + a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -213,11 +221,12 @@ namespace Parser
                     throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
+                break;
             }
 
             case Bytecode::Opecode::c_subtraction:
             {
-
+                output_debug("SUB | ", {"SUB VALUE"});
                 LocalVariable local_variable_1 = stack_system->pop();
                 LocalVariable local_variable_2 = stack_system->pop();
 
@@ -238,7 +247,8 @@ namespace Parser
 
                     int a = local_variable_1.getValueInt();
                     int b = local_variable_2.getValueInt();
-                    new_local_variable.setValue(a - b);
+                    new_local_variable.setValue(b - a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -246,7 +256,8 @@ namespace Parser
                 {
                     float a = local_variable_1.getValueFloat();
                     float b = local_variable_2.getValueFloat();
-                    new_local_variable.setValue(a - b);
+                    new_local_variable.setValue(b - a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -254,7 +265,8 @@ namespace Parser
                 {
                     bool a = local_variable_1.getValueBoolean();
                     bool b = local_variable_2.getValueBoolean();
-                    new_local_variable.setValue(a && b);
+                    new_local_variable.setValue(b && a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -265,6 +277,7 @@ namespace Parser
                     vint c = a;
                     c.insert(c.end(), b.begin(), b.end());
                     new_local_variable.setValue(c);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -275,6 +288,7 @@ namespace Parser
                     vstring c = a;
                     c.insert(c.end(), b.begin(), b.end());
                     new_local_variable.setValue(c);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -288,7 +302,7 @@ namespace Parser
 
             case Bytecode::Opecode::c_multiplication:
             {
-
+                output_debug("MUL | ", {"MUL VALUE"});
                 LocalVariable local_variable_1 = stack_system->pop();
 
                 LocalVariable local_variable_2 = stack_system->pop();
@@ -309,7 +323,8 @@ namespace Parser
                 {
                     int a = local_variable_1.getValueInt();
                     int b = local_variable_2.getValueInt();
-                    new_local_variable.setValue(a * b);
+                    new_local_variable.setValue(b * a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -317,7 +332,8 @@ namespace Parser
                 {
                     float a = local_variable_1.getValueFloat();
                     float b = local_variable_2.getValueFloat();
-                    new_local_variable.setValue(a * b);
+                    new_local_variable.setValue(b * a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -325,7 +341,8 @@ namespace Parser
                 {
                     bool a = local_variable_1.getValueBoolean();
                     bool b = local_variable_2.getValueBoolean();
-                    new_local_variable.setValue(a && b);
+                    new_local_variable.setValue(b && a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -338,7 +355,7 @@ namespace Parser
             }
             case Bytecode::Opecode::c_division:
             {
-
+                output_debug("DIV | ", {"DIV VALUE"});
                 LocalVariable local_variable_1 = stack_system->pop();
                 LocalVariable local_variable_2 = stack_system->pop();
 
@@ -356,7 +373,8 @@ namespace Parser
                 {
                     int a = local_variable_1.getValueInt();
                     int b = local_variable_2.getValueInt();
-                    new_local_variable.setValue(a / b);
+                    new_local_variable.setValue(b / a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 
@@ -364,7 +382,8 @@ namespace Parser
                 {
                     float a = local_variable_1.getValueFloat();
                     float b = local_variable_2.getValueFloat();
-                    new_local_variable.setValue(a / b);
+                    new_local_variable.setValue(b / a);
+                    stack_system->push(new_local_variable);
                     break;
                 }
 

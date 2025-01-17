@@ -21,7 +21,7 @@ namespace Parser
 
     LocalVariable::LocalVariable()
     {
-        this->type = Bytecode::Opecode::d_int;
+        this->opcr_type = Bytecode::Opecode::d_int;
         this->store_type = store_type_map[Bytecode::Opecode::d_int];
 
         this->intValue = 0;
@@ -34,7 +34,7 @@ namespace Parser
 
     LocalVariable::LocalVariable(Bytecode::opcr type)
     {
-        this->type = type;
+        this->opcr_type = type;
 
         if (!hasStoreTypeMap(type))
         {
@@ -141,7 +141,6 @@ namespace Parser
     {
         output_debug("SS-PA | ", {"PUSH VALUE", String(stack.size())});
         stack.push_back(local_variable);
-        output_debug("SS-PB | ", {"PUSH VALUE", String(stack.size())});
     }
 
     LocalVariable StackSystem::pop()
@@ -149,6 +148,10 @@ namespace Parser
         if (stack.size() == 0)
         {
             throw std::runtime_error("Error: Stack is empty.");
+        }
+        else
+        {
+            output_debug("SS-PO | ", {"POP VALUE", String(stack.size())});
         }
 
         LocalVariable local_variable = stack.back();
@@ -515,7 +518,7 @@ namespace Parser
 
         for (int i = 0; i < stack_system->size(); i++)
         {
-            output_debug("-    Stack System", {String(i), String(stack_system->getStack()[i].type), stack_system->getStack()[i].getCastString()});
+            output_debug("-    Stack System", {String(i), String(stack_system->getStack()[i].opcr_type), stack_system->getStack()[i].getCastString()});
         }
     }
 };

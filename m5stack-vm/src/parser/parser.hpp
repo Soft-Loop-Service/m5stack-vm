@@ -77,7 +77,7 @@ namespace Parser
     {
 
     public:
-        Bytecode::opcr type;
+        Bytecode::opcr opcr_type;
 
         enum ValueType
         {
@@ -113,7 +113,7 @@ namespace Parser
         LocalVariable(Bytecode::opcr);
 
         LocalVariable(const LocalVariable &other)
-            : store_type(other.store_type), type(other.type)
+            : store_type(other.store_type), opcr_type(other.opcr_type)
         {
             switch (store_type)
             {
@@ -207,6 +207,7 @@ namespace Parser
 
         ~LocalVariable()
         {
+            output_debug("LocalVariable is deleted.", {getCastString()});
             clear();
         }
 
@@ -214,14 +215,14 @@ namespace Parser
         {
             semi_clear();
 
-            if (!hasStoreTypeMap(type))
+            if (!hasStoreTypeMap(opcr_type))
             {
-                output_debug(String("ERROR:"), type);
+                output_debug(String("ERROR:"), opcr_type);
 
                 throw std::runtime_error("Error: Type is not matched.");
             }
 
-            switch (store_type_map[type])
+            switch (store_type_map[opcr_type])
             {
             case INT:
             {
@@ -268,13 +269,13 @@ namespace Parser
         void setValueAnalysis(String arg)
         {
             semi_clear();
-            if (!hasStoreTypeMap(type))
+            if (!hasStoreTypeMap(opcr_type))
             {
-                output_debug(String("ERROR:"), type);
+                output_debug(String("ERROR:"), opcr_type);
 
                 throw std::runtime_error("Error: Type is not matched.");
             }
-            switch (store_type_map[type])
+            switch (store_type_map[opcr_type])
             {
             case INT:
             {
@@ -304,42 +305,42 @@ namespace Parser
         void setValue(int value)
         {
             clear();
-            type = INT;
+            store_type = INT;
             intValue = value;
         }
 
         void setValue(float value)
         {
             clear();
-            type = FLOAT;
+            store_type = FLOAT;
             floatValue = value;
         }
 
         void setValue(bool value)
         {
             clear();
-            type = BOOLEAN;
+            store_type = BOOLEAN;
             booleanValue = value;
         }
 
         void setValue(const String value)
         {
             clear();
-            type = STRING;
+            store_type = STRING;
             stringValue = new String(value);
         }
 
         void setValue(const vint value)
         {
             clear();
-            type = VINT;
+            store_type = VINT;
             vectorIntValue = new vint(value);
         }
 
         void setValue(const vstring value)
         {
             clear();
-            type = VSTRING;
+            store_type = VSTRING;
             vectorStringValue = new vstring(value);
         }
 
@@ -375,12 +376,18 @@ namespace Parser
 
         Bytecode::opcr getType() const
         {
-            return type;
+            return opcr_type;
         }
 
-        String getCastString() const
+        String getCastString()
         {
-            ValueType store_type = store_type_map.at(type);
+            if (!hasStoreTypeMap(opcr_type))
+            {
+                output_debug(String("ERROR:"), opcr_type);
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+
+            ValueType store_type = store_type_map.at(opcr_type);
             switch (store_type)
             {
             case INT:
