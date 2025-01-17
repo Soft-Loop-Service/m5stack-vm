@@ -4,10 +4,13 @@
 
 #include "./../bytecode_definition.hpp"
 #include <sstream>
+#include "./../debug.hpp"
 // フラットパーサー
 
 namespace Parser
 {
+    class LocalVariable;
+
     template <typename T>
     class Store
     {
@@ -20,15 +23,19 @@ namespace Parser
         }
 
     public:
-        Store() = default;
+        Store()
+        {
+            store = {};
+            unique_id = 0;
+        }
 
-        int setValue(int id, const T &value)
+        int setValue(int id, const T value)
         {
             store[id] = value;
             return id;
         }
 
-        int setValue(const T &value)
+        int setValue(const T value)
         {
             int id = getUniqueId();
             store[id] = value;
@@ -57,8 +64,8 @@ namespace Parser
         std::vector<LocalVariable> stack;
 
     public:
-        StackSystem() = default;
-        void push(LocalVariable local_variable);
+        StackSystem();
+        void push(LocalVariable);
         LocalVariable pop();
         LocalVariable getTop();
         void clear();
@@ -68,7 +75,10 @@ namespace Parser
 
     class LocalVariable
     {
+
     public:
+        Bytecode::opcr type;
+
         enum ValueType
         {
             INT,
@@ -99,15 +109,118 @@ namespace Parser
             {Bytecode::Opecode::d_class, INT},
             {Bytecode::Opecode::d_boolean, BOOLEAN}};
 
-        Bytecode::opcr type;
-
-        LocalVariable() : store_type(INT), intValue(0), type(0) {};
+        LocalVariable();
         LocalVariable(Bytecode::opcr);
-        ~LocalVariable() { clear(); }
+
+        LocalVariable(const LocalVariable &other)
+            : store_type(other.store_type), type(other.type)
+        {
+            switch (store_type)
+            {
+            case INT:
+                intValue = other.intValue;
+                break;
+            case FLOAT:
+                floatValue = other.floatValue;
+                break;
+            case BOOLEAN:
+                booleanValue = other.booleanValue;
+                break;
+            case STRING:
+                stringValue = other.stringValue ? new String(*other.stringValue) : nullptr;
+                break;
+            case VINT:
+                vectorIntValue = other.vectorIntValue ? new vint(*other.vectorIntValue) : nullptr;
+                break;
+            case VSTRING:
+                vectorStringValue = other.vectorStringValue ? new vstring(*other.vectorStringValue) : nullptr;
+                break;
+            default:
+                break;
+            }
+        }
+
+        void clear()
+        {
+            // stringValueがnullptrでない場合にのみ解放
+            if (store_type == STRING && stringValue != nullptr)
+            {
+                delete stringValue;
+                stringValue = nullptr;
+            }
+            // vectorIntValueがnullptrでない場合にのみ解放
+            else if (store_type == VINT && vectorIntValue != nullptr)
+            {
+                delete vectorIntValue;
+                vectorIntValue = nullptr;
+            }
+            // vectorStringValueがnullptrでない場合にのみ解放
+            else if (store_type == VSTRING && vectorStringValue != nullptr)
+            {
+                delete vectorStringValue;
+                vectorStringValue = nullptr;
+            }
+
+            // store_typeをデフォルトのINTにリセット
+            store_type = INT;
+
+            // 各値をデフォルトにリセット
+            intValue = 0;
+            floatValue = 0.0;
+            booleanValue = false;
+        }
+
+        void semi_clear()
+        {
+            // stringValueがnullptrでない場合にのみ解放
+            if (store_type == STRING && stringValue != nullptr)
+            {
+                delete stringValue;
+                stringValue = nullptr;
+            }
+            // vectorIntValueがnullptrでない場合にのみ解放
+            else if (store_type == VINT && vectorIntValue != nullptr)
+            {
+                delete vectorIntValue;
+                vectorIntValue = nullptr;
+            }
+            // vectorStringValueがnullptrでない場合にのみ解放
+            else if (store_type == VSTRING && vectorStringValue != nullptr)
+            {
+                delete vectorStringValue;
+                vectorStringValue = nullptr;
+            }
+
+            // store_typeをデフォルトのINTにリセット
+            // store_type = INT; //これだけしない
+
+            // 各値をデフォルトにリセット
+            intValue = 0;
+            floatValue = 0.0;
+            booleanValue = false;
+        }
+
+        bool hasStoreTypeMap(Bytecode::opcr type)
+        {
+            return store_type_map.find(type) != store_type_map.end();
+        }
+
+        ~LocalVariable()
+        {
+            clear();
+        }
 
         void setValueAnalysis(vstring args)
         {
-            clear();
+            semi_clear();
+
+            if (!hasStoreTypeMap(type))
+            {
+                output_debug(String("ERROR:"), type);
+
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+
             switch (store_type_map[type])
             {
             case INT:
@@ -116,6 +229,7 @@ namespace Parser
 
                 for (int i = 0; i < args.size(); i++)
                 {
+                    canConvertToIntTry(args[i]);
                     vectorIntValue->push_back(args[i].toInt());
                 }
 
@@ -128,6 +242,7 @@ namespace Parser
 
                 for (int i = 0; i < args.size(); i++)
                 {
+                    canConvertToFloatTry(args[i]);
                     vectorIntValue->push_back(args[i].toFloat());
                 }
 
@@ -152,21 +267,37 @@ namespace Parser
         }
         void setValueAnalysis(String arg)
         {
-            clear();
+            semi_clear();
+            if (!hasStoreTypeMap(type))
+            {
+                output_debug(String("ERROR:"), type);
+
+                throw std::runtime_error("Error: Type is not matched.");
+            }
             switch (store_type_map[type])
             {
             case INT:
+            {
+                canConvertToIntTry(arg);
                 intValue = arg.toInt();
                 break;
+            }
             case FLOAT:
+            {
+                canConvertToFloatTry(arg);
                 floatValue = arg.toFloat();
                 break;
+            }
             case BOOLEAN:
+            {
                 booleanValue = arg == "true";
                 break;
+            }
             case STRING:
+            {
                 stringValue = new String(arg);
                 break;
+            }
             }
         }
 
@@ -249,6 +380,7 @@ namespace Parser
 
         String getCastString() const
         {
+            ValueType store_type = store_type_map.at(type);
             switch (store_type)
             {
             case INT:
@@ -284,16 +416,6 @@ namespace Parser
             default:
                 return "unknown";
             }
-        }
-
-        void clear()
-        {
-            if (type == STRING)
-                delete stringValue;
-            if (type == VINT)
-                delete vectorIntValue;
-            if (type == VSTRING)
-                delete vectorStringValue;
         }
     };
     class ByteCodeLine
@@ -341,7 +463,7 @@ namespace Parser
         std::vector<ByteCodeLine> getByteCode();
         vint getChildren();
         std::map<int, LocalVariable> getLocalVariableList();
-        LocalVariable LocalScope::getLocalVariable(int);
+        LocalVariable getLocalVariable(int);
 
         void setLocalVariableList(std::map<int, LocalVariable>);
         void setLocalVariable(int, LocalVariable);

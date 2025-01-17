@@ -3,6 +3,7 @@
 #define __DEBUG
 
 #include "./definition.hpp"
+#include <stdexcept>
 
 void output_debug(String, vint);
 void output_debug(String, int);

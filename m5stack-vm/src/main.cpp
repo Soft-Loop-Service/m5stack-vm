@@ -17,6 +17,33 @@ void setup()
   parser = new Parser::ParserSystem(receivedData);
 }
 
+void try_parse()
+{
+  try
+  {
+    parser->refresh(receivedData);
+    parser->parser();
+  }
+  catch (const std::runtime_error &e)
+  {
+    std::ostringstream *errer_message = new std::ostringstream();
+    *errer_message << "Caught a runtime_error: " << e.what() << std::endl;
+    output_debug(String(errer_message->str().c_str()));
+  }
+  catch (const std::exception &e)
+  {
+    std::ostringstream *errer_message = new std::ostringstream();
+    *errer_message << "Caught a standard exception: " << e.what() << std::endl;
+    output_debug(String(errer_message->str().c_str()));
+  }
+  catch (...)
+  {
+    std::ostringstream *errer_message = new std::ostringstream();
+    *errer_message << "Caught an unknown exception" << std::endl;
+    output_debug(String(errer_message->str().c_str()));
+  }
+}
+
 // 1行分のデータを処理して配列に記録
 void processLine(String line)
 {
@@ -50,8 +77,7 @@ void processLine(String line)
   {
     if (tokens[0] == "##parser")
     {
-      parser->refresh(receivedData);
-      parser->parser();
+      try_parse();
 
       output_debug("Parser is completed.");
       return;
@@ -161,7 +187,6 @@ void loop()
     M5.Lcd.setCursor(0, 0);
 
     // パーサーを実行
-    parser->refresh(receivedData);
     parser->parser();
   }
   M5.update(); // M5Stackのボタン処理

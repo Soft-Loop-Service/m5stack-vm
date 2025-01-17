@@ -1,12 +1,15 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
 #include "M5Core2.h"
+#include <stdexcept>
+
 namespace Parser
 {
 
     Bytecode::opcr getDec(String hexStr)
     {
         unsigned int decimalValue;
+        canConvertToIntTry(hexStr);
         decimalValue = hexStr.toInt();
         return decimalValue;
 
@@ -16,22 +19,55 @@ namespace Parser
         return decimalValue;      // unsigned intに変換
     };
 
+    LocalVariable::LocalVariable()
+    {
+        this->type = Bytecode::Opecode::d_int;
+        this->store_type = store_type_map[Bytecode::Opecode::d_int];
+
+        this->intValue = 0;
+        this->floatValue = 0.0;
+        this->booleanValue = false;
+        this->stringValue = nullptr;
+        this->vectorIntValue = nullptr;
+        this->vectorStringValue = nullptr;
+    }
+
     LocalVariable::LocalVariable(Bytecode::opcr type)
     {
         this->type = type;
+
+        if (!hasStoreTypeMap(type))
+        {
+            output_debug(String(type));
+            throw std::runtime_error("Error: Type is not matched. (constructor opcr)");
+        }
+
         this->store_type = store_type_map[type];
+
+        this->intValue = 0;
+        this->floatValue = 0.0;
+        this->booleanValue = false;
+        this->stringValue = nullptr;
+        this->vectorIntValue = nullptr;
+        this->vectorStringValue = nullptr;
     }
 
     LocalScope::LocalScope()
     {
         children = {};
         local_variable = {};
+        byte_code = {};
+        this->index = -1;
+        this->scope_type = -1;
+        this->directly_index = -1;
+        this->parent_index = -1;
     }
 
     LocalScope::LocalScope(int index, int scope_type, int directly_index, int parent_index)
     {
         children = {};
         local_variable = {};
+        byte_code = {};
         this->index = index;
         this->scope_type = scope_type;
         this->directly_index = directly_index;
@@ -95,17 +131,24 @@ namespace Parser
         return parent_index;
     }
 
+    StackSystem::StackSystem()
+    {
+        stack = {};
+        output_debug("STACK | ", {"constructor", String(stack.size())});
+    }
+
     void StackSystem::push(LocalVariable local_variable)
     {
+        output_debug("SS-PA | ", {"PUSH VALUE", String(stack.size())});
         stack.push_back(local_variable);
+        output_debug("SS-PB | ", {"PUSH VALUE", String(stack.size())});
     }
 
     LocalVariable StackSystem::pop()
     {
         if (stack.size() == 0)
         {
-            output_debug("Error: Stack is empty.");
-            return LocalVariable();
+            throw std::runtime_error("Error: Stack is empty.");
         }
 
         LocalVariable local_variable = stack.back();
@@ -151,6 +194,10 @@ namespace Parser
             this->opecode = getDec(operand_list[0]);
             this->operand_list = operand_list;
         }
+        else
+        {
+            throw std::runtime_error("Error: Operand list is empty.");
+        }
     }
 
     Bytecode::opcr ByteCodeLine::getOpecode()
@@ -172,8 +219,9 @@ namespace Parser
         int index = 1;
         if (index >= operand_list.size())
         {
-            return Bytecode::Opecode::value_null;
+            throw std::runtime_error("Error: Operand index is out of range.");
         }
+        canConvertToIntTry(operand_list[index]);
         return operand_list[index].toInt();
     }
 
@@ -181,8 +229,9 @@ namespace Parser
     {
         if (index >= operand_list.size())
         {
-            return Bytecode::Opecode::value_null;
+            throw std::runtime_error("Error: Operand index is out of range.");
         }
+        canConvertToIntTry(operand_list[index]);
         return operand_list[index].toInt();
     }
 
@@ -190,15 +239,18 @@ namespace Parser
     {
         if (index >= operand_list.size())
         {
-            return -1;
+            throw std::runtime_error("Error: Operand index is out of range.");
         }
+
+        canConvertToIntTry(operand_list[index]);
+
         return operand_list[index].toInt();
     }
     String ByteCodeLine::getOperand(int index)
     {
         if (index >= operand_list.size())
         {
-            return String("");
+            throw std::runtime_error("Error: Operand index is out of range.");
         }
         return operand_list[index];
     }
@@ -223,7 +275,7 @@ namespace Parser
     {
         received_data = rd;
         local_scope = {};
-        stack_system = {};
+        stack_system = new StackSystem();
     }
 
     bool ParserSystem::hasProgram(int line, int column)
@@ -256,6 +308,9 @@ namespace Parser
         }
 
         String program = received_data[line][column];
+
+        canConvertToIntTry(program);
+
         return (unsigned int)program.toInt();
     }
     int ParserSystem::getProgramInt(int line, int column)
@@ -272,6 +327,7 @@ namespace Parser
         }
 
         String program = received_data[line][column];
+        canConvertToIntTry(program);
         return program.toInt();
     }
     String ParserSystem::getProgram(int line, int column)
@@ -320,7 +376,7 @@ namespace Parser
 
         if (!(start_flag_latest_line >= 0) || !(end_flag_first_line >= 0))
         {
-            output_debug("Error: Program is not complete.");
+            std::runtime_error("Error: Program is not complete.");
             return;
         }
         else
@@ -431,10 +487,16 @@ namespace Parser
             //     output_debug("-        Local Variable VALUE : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].getCastString()});
             //     output_debug("-        Local Variable ID___ : ", {itr->second.getLocalVariable()[i].type, itr->second.getLocalVariable()[i].directly_index});
             // }
-            for (auto itr2 = itr->second.getLocalVariableList().begin(); itr2 != itr->second.getLocalVariableList().end(); ++itr2)
+
+            auto lv_list = itr->second.getLocalVariableList();
+
+            for (auto itr2 = lv_list.begin(); itr2 != lv_list.end(); ++itr2)
             {
-                output_debug("-        Local Variable VALUE : ", {String(itr2->first), String(itr2->second.type), itr2->second.getCastString()});
+                output_debug("-        Local Variable VALUE : ", {String(itr2->first), String(itr2->second.getType()), itr2->second.getCastString()});
             }
+            // output_debug("-        Local Variable VALUE : ", {String(c->first), String(itr2->second.type), itr2->second.getCastString()});
+
+            output_debug("-        ByteCode(size)", {String(itr->second.getByteCode().size())});
 
             for (int i = 0; i < itr->second.getByteCode().size(); i++)
             {

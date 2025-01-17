@@ -1,6 +1,7 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
 #include "M5Core2.h"
+#include <stdexcept>
 
 namespace Parser
 {
@@ -12,19 +13,29 @@ namespace Parser
         {
             Bytecode::opcr opcode = current_bytecode[i].getOpecode();
 
+            output_debug("Opcode", {opcode});
+
             switch (opcode)
             {
             case Bytecode::Opecode::push:
             {
 
                 Bytecode::opcr type = current_bytecode[i].getOperandType(1);
-                String opd = current_bytecode[i].getOperand(2);
+                output_debug("PUSH | ", {type});
 
-                LocalVariable new_local_variable(type);
+                String opd = current_bytecode[i].getOperand(2);
+                output_debug("PUSH | ", {opd});
+
+                LocalVariable new_local_variable;
+
+                output_debug("PUSH | ", {"NEW VALUE"});
+
                 new_local_variable.setValueAnalysis(opd);
 
-                stack_system->push(new_local_variable);
+                output_debug("PUSH | ", {"SET VALUE"});
 
+                stack_system->push(new_local_variable);
+                output_debug("PUSH | ", {"PUSH VALUE"});
                 break;
             }
 
@@ -45,7 +56,8 @@ namespace Parser
 
                 if (local_variable.getType() != Bytecode::Opecode::d_function)
                 {
-                    output_debug("Error: Type is not matched.");
+                    output_debug({"ERROR:", String(local_variable.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -77,7 +89,8 @@ namespace Parser
 
                 if (s_index == -1)
                 {
-                    output_debug("Error: Store index is not found.");
+                    output_debug({"ERROR:", "2", String(current_bytecode[i].getOperandListSize())});
+                    throw std::runtime_error("Error: Store index is not found.");
                     break;
                 }
 
@@ -98,7 +111,8 @@ namespace Parser
 
                 if (s_index == -1)
                 {
-                    output_debug("Error: Load index is not found.");
+                    output_debug({"ERROR:", "2", String(current_bytecode[i].getOperandListSize())});
+                    throw std::runtime_error("Error: Load index is not found.");
                     break;
                 }
 
@@ -126,7 +140,8 @@ namespace Parser
 
                 if (local_variable_1.getType() != local_variable_2.getType())
                 {
-                    output_debug("Error: Type is not matched.");
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -194,7 +209,8 @@ namespace Parser
                 }
 
                 default:
-                    output_debug("Error: Type is not matched.");
+
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
             }
@@ -207,7 +223,9 @@ namespace Parser
 
                 if (local_variable_1.getType() != local_variable_2.getType())
                 {
-                    output_debug("Error: Type is not matched.");
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -217,6 +235,7 @@ namespace Parser
                 {
                 case Bytecode::Opecode::d_int:
                 {
+
                     int a = local_variable_1.getValueInt();
                     int b = local_variable_2.getValueInt();
                     new_local_variable.setValue(a - b);
@@ -260,7 +279,7 @@ namespace Parser
                 }
 
                 default:
-                    output_debug("Error: Type is not matched.");
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -276,7 +295,8 @@ namespace Parser
 
                 if (local_variable_1.getType() != local_variable_2.getType())
                 {
-                    output_debug("Error: Type is not matched.");
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -310,7 +330,7 @@ namespace Parser
                 }
 
                 default:
-                    output_debug("Error: Type is not matched.");
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -324,7 +344,7 @@ namespace Parser
 
                 if (local_variable_1.getType() != local_variable_2.getType())
                 {
-                    output_debug("Error: Type is not matched.");
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -349,7 +369,7 @@ namespace Parser
                 }
 
                 default:
-                    output_debug("Error: Type is not matched.");
+                    throw std::runtime_error("Error: Type is not matched.");
                     break;
                 }
 
@@ -446,6 +466,9 @@ namespace Parser
                 break;
             }
         }
+
+        all_output_local_scope();
+        all_output_stack_system();
     }
 
     void ParserSystem::process()
