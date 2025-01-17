@@ -502,6 +502,9 @@ namespace Parser
         bool hasProgram(int line, int column);
         Bytecode::opcr getProgramOpecode(int line, int column);
 
+        // current_scope_index directly_indexと、その上位を探す
+        LocalVariable searchLocalVariableInScope(int, int);
+
         void parser();
 
         void recursionProcess(int);

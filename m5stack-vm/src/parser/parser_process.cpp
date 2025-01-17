@@ -9,6 +9,16 @@ namespace Parser
     {
         std::vector<ByteCodeLine> current_bytecode = local_scope[scope_index].getByteCode();
 
+        std::map<int, int> label_map = {};
+
+        for (int i = 0; i < current_bytecode.size(); i++)
+        {
+            if (current_bytecode[i].getOpecode() == Bytecode::Opecode::s_label_point)
+            {
+                label_map[current_bytecode[i].getOperandInt(1)] = i;
+            }
+        }
+
         for (int i = 0; i < current_bytecode.size(); i++)
         {
             Bytecode::opcr opcode = current_bytecode[i].getOpecode();
@@ -26,7 +36,7 @@ namespace Parser
                 String opd = current_bytecode[i].getOperand(2);
                 output_debug("PUSH | ", {opd});
 
-                LocalVariable new_local_variable;
+                LocalVariable new_local_variable(type);
 
                 output_debug("PUSH | ", {"NEW VALUE"});
 
@@ -107,16 +117,16 @@ namespace Parser
             case Bytecode::Opecode::s_load:
             {
 
-                int s_index = current_bytecode[i].getOperandInt(2);
+                int d_index = current_bytecode[i].getOperandInt(2);
 
-                if (s_index == -1)
+                if (d_index == -1)
                 {
                     output_debug({"ERROR:", "2", String(current_bytecode[i].getOperandListSize())});
                     throw std::runtime_error("Error: Load index is not found.");
                     break;
                 }
 
-                LocalVariable local_variable = local_scope[scope_index].getLocalVariable(s_index);
+                LocalVariable local_variable = searchLocalVariableInScope(scope_index, d_index);
 
                 stack_system->push(local_variable);
 
@@ -125,6 +135,8 @@ namespace Parser
 
             case Bytecode::Opecode::s_jump:
             {
+                int label_id = current_bytecode[i].getOperandInt(1);
+                i = label_map[label_id];
                 break;
             }
 
@@ -304,7 +316,6 @@ namespace Parser
             {
                 output_debug("MUL | ", {"MUL VALUE"});
                 LocalVariable local_variable_1 = stack_system->pop();
-
                 LocalVariable local_variable_2 = stack_system->pop();
 
                 if (local_variable_1.getType() != local_variable_2.getType())
@@ -408,31 +419,340 @@ namespace Parser
 
             case Bytecode::Opecode::s_if_icmpeq:
             {
+                output_debug("IF ICMPEQ | ", {"ICMPEQ VALUE"});
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b == a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b == a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b == a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 
             case Bytecode::Opecode::s_if_icmpne:
             {
+                output_debug("IF ICMPNE | ", {"ICMPNE VALUE"});
+
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b != a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b != a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b != a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 
             case Bytecode::Opecode::s_if_icmpge:
             {
+                output_debug("IF ICMPGE | ", {"ICMPGE VALUE"});
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b >= a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b >= a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b >= a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 
             case Bytecode::Opecode::s_if_icmpgt:
             {
+                output_debug("IF ICMPGT | ", {"ICMPGT VALUE"});
+
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b > a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b > a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b > a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 
             case Bytecode::Opecode::s_if_icmple:
             {
+                output_debug("IF ICMPLE | ", {"ICMPLE VALUE"});
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b <= a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b <= a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b <= a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 
             case Bytecode::Opecode::s_if_icmplt:
             {
+                output_debug("IF ICMPLT | ", {"ICMPLT VALUE"});
+
+                LocalVariable local_variable_1 = stack_system->pop();
+                LocalVariable local_variable_2 = stack_system->pop();
+
+                if (local_variable_1.getType() != local_variable_2.getType())
+                {
+                    output_debug({"ERROR:", String(local_variable_1.getType()), String(local_variable_2.getType())});
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                bool result = false;
+
+                switch (local_variable_1.getType())
+                {
+
+                case Bytecode::Opecode::d_int:
+                {
+                    int a = local_variable_1.getValueInt();
+                    int b = local_variable_2.getValueInt();
+                    result = b < a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_float:
+                {
+                    float a = local_variable_1.getValueFloat();
+                    float b = local_variable_2.getValueFloat();
+                    result = b < a;
+                    break;
+                }
+
+                case Bytecode::Opecode::d_boolean:
+                {
+                    bool a = local_variable_1.getValueBoolean();
+                    bool b = local_variable_2.getValueBoolean();
+                    result = b < a;
+                    break;
+                }
+
+                default:
+                    throw std::runtime_error("Error: Type is not matched.");
+                    break;
+                }
+
+                if (!result)
+                {
+                    int label_id = current_bytecode[i].getOperandInt(1);
+                    i = label_map[label_id];
+                }
+
                 break;
             }
 

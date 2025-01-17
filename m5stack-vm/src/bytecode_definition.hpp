@@ -63,8 +63,8 @@ namespace Bytecode
         // 第2引数はローカル変数のインデックス
         const opcr s_load = 40;
 
-        const opcr s_jump = 50;        // 第2引数はラベルID
-        const opcr s_label_point = 51; // 第二引数はラベルID
+        const opcr s_jump = 50;        // 第1引数はラベルID
+        const opcr s_label_point = 51; // 第1引数はラベルID
 
         const opcr c_add = 100;
         const opcr c_subtraction = 101;

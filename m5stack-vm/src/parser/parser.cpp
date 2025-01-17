@@ -479,6 +479,24 @@ namespace Parser
         process();
     }
 
+    LocalVariable ParserSystem::searchLocalVariableInScope(int current_scope_index, int directly_index)
+    {
+        int search = current_scope_index;
+        while (search >= 0)
+        {
+            std::map<int, Parser::LocalVariable> lvl = local_scope[search].getLocalVariableList();
+
+            if (lvl.find(directly_index) != lvl.end())
+            {
+                return lvl[directly_index];
+            }
+
+            search = local_scope[search].getParentIndex();
+        }
+
+        throw std::runtime_error("Error: Local scope is not found.");
+    }
+
     void ParserSystem::all_output_local_scope()
     {
         output_debug("* * * * * * all output local scope * * * * * * ");

@@ -28,7 +28,10 @@ void try_parse()
   {
     std::ostringstream *errer_message = new std::ostringstream();
     *errer_message << "Caught a runtime_error: " << e.what() << std::endl;
+
     output_debug(String(errer_message->str().c_str()));
+    parser->all_output_local_scope();
+    parser->all_output_stack_system();
   }
   catch (const std::exception &e)
   {
