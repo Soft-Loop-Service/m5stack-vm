@@ -31,7 +31,7 @@ void try_parse()
 
     output_debug(String(errer_message->str().c_str()));
     parser->all_output_local_scope();
-    parser->all_output_stack_system();
+    parser->all_output_call_stack_system();
   }
   catch (const std::exception &e)
   {
@@ -114,12 +114,22 @@ void processLine(String line)
       parser->all_output_local_scope();
       return;
     }
-    else if (tokens[0] == "##all_output_stack_system")
+    else if (tokens[0] == "##all_output_call_stack_system")
     {
-      parser->all_output_stack_system();
+      parser->all_output_call_stack_system();
       return;
     }
+    else if (tokens[0] == "##all_output_opecode_stack_system")
+    {
+      parser->all_output_opecode_stack_system();
+      return;
+    }
+    else if (tokens[0] == "##stop_program")
+    {
+      parser->stop(false);
 
+      return;
+    }
     else if (tokens[0] == "##debug")
     {
       for (const auto &line : receivedData)

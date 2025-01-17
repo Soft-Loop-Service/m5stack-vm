@@ -52,8 +52,42 @@ namespace Parser
         this->vectorStringValue = nullptr;
     }
 
+    ScopeSystem::ScopeSystem()
+    {
+        children = {};
+        local_variable = {};
+        // byte_code = {};
+        this->index = -1;
+        this->scope_type = -1;
+        this->directly_index = -1;
+        this->parent_index = -1;
+    }
+
+    ScopeSystem::ScopeSystem(int index, int scope_type, int directly_index, int parent_index)
+    {
+        children = {};
+        local_variable = {};
+        // byte_code = {};
+        this->index = index;
+        this->scope_type = scope_type;
+        this->directly_index = directly_index;
+        this->parent_index = parent_index;
+    }
+
+    ScopeSystem::ScopeSystem(LocalScope ls)
+    {
+        children = ls.children;
+        local_variable = ls.local_variable;
+        // byte_code = ls.byte_code;
+        this->index = ls.index;
+        this->scope_type = ls.scope_type;
+        this->directly_index = ls.directly_index;
+        this->parent_index = ls.parent_index;
+    }
+
     LocalScope::LocalScope()
     {
+
         children = {};
         local_variable = {};
         byte_code = {};
@@ -74,12 +108,55 @@ namespace Parser
         this->parent_index = parent_index;
     }
 
-    void LocalScope::addChildren(int index)
+    CallStackScope::CallStackScope()
+    {
+        children = {};
+        local_variable = {};
+        this->index = -1;
+        this->scope_type = -1;
+        this->directly_index = -1;
+        this->parent_index = -1;
+        this->return_point = 0;
+    }
+
+    CallStackScope::CallStackScope(int index, int scope_type, int directly_index, int parent_index)
+    {
+        children = {};
+        local_variable = {};
+        this->index = index;
+        this->scope_type = scope_type;
+        this->directly_index = directly_index;
+        this->parent_index = parent_index;
+        this->return_point = 0;
+    }
+
+    CallStackScope::CallStackScope(LocalScope ls, int return_point)
+    {
+        children = ls.getChildren();
+        local_variable = ls.getLocalVariableList();
+        this->index = ls.getIndex();
+        this->scope_type = ls.getScopeType();
+        this->directly_index = ls.getDirectlyIndex();
+        this->parent_index = ls.getParentIndex();
+        this->return_point = return_point;
+    }
+
+    void CallStackScope::setReturnPoint(int return_point)
+    {
+        this->return_point = return_point;
+    }
+
+    int CallStackScope::getReturnPoint()
+    {
+        return return_point;
+    }
+
+    void ScopeSystem::addChildren(int index)
     {
         children.push_back(index);
     }
 
-    void LocalScope::addLocalVariable(Bytecode::opcr type, int directly_index)
+    void ScopeSystem::addLocalVariable(Bytecode::opcr type, int directly_index)
     {
         local_variable[directly_index] = (LocalVariable(type));
     }
@@ -92,91 +169,43 @@ namespace Parser
     {
         return byte_code;
     }
-    vint LocalScope::getChildren()
+    vint ScopeSystem::getChildren()
     {
         return children;
     }
-    std::map<int, LocalVariable> LocalScope::getLocalVariableList()
+    std::map<int, LocalVariable> ScopeSystem::getLocalVariableList()
     {
         return local_variable;
     }
-    LocalVariable LocalScope::getLocalVariable(int directly_index)
+    LocalVariable ScopeSystem::getLocalVariable(int directly_index)
     {
         return local_variable[directly_index];
     }
 
-    void LocalScope::setLocalVariableList(std::map<int, LocalVariable> lv)
+    void ScopeSystem::setLocalVariableList(std::map<int, LocalVariable> lv)
     {
         local_variable = lv;
     }
-    void LocalScope::setLocalVariable(int directly_index, LocalVariable lv)
+    void ScopeSystem::setLocalVariable(int directly_index, LocalVariable lv)
     {
         local_variable[directly_index] = lv;
     }
 
-    int LocalScope::getIndex()
+    int ScopeSystem::getIndex()
     {
         return index;
     }
-    int LocalScope::getScopeType()
+    int ScopeSystem::getScopeType()
     {
         return scope_type;
     }
-    int LocalScope::getDirectlyIndex()
+    int ScopeSystem::getDirectlyIndex()
     {
         return directly_index;
     }
-    int LocalScope::getParentIndex()
+    int ScopeSystem::getParentIndex()
     {
         return parent_index;
-    }
-
-    StackSystem::StackSystem()
-    {
-        stack = {};
-        output_debug("STACK | ", {"constructor", String(stack.size())});
-    }
-
-    void StackSystem::push(LocalVariable local_variable)
-    {
-        output_debug("SS-PA | ", {"PUSH VALUE", String(stack.size())});
-        stack.push_back(local_variable);
-    }
-
-    LocalVariable StackSystem::pop()
-    {
-        if (stack.size() == 0)
-        {
-            throw std::runtime_error("Error: Stack is empty.");
-        }
-        else
-        {
-            output_debug("SS-PO | ", {"POP VALUE", String(stack.size())});
-        }
-
-        LocalVariable local_variable = stack.back();
-        stack.pop_back();
-        return local_variable;
-    }
-
-    LocalVariable StackSystem::getTop()
-    {
-        return stack.back();
-    }
-
-    void StackSystem::clear()
-    {
-        stack.clear();
-    }
-
-    int StackSystem::size()
-    {
-        return stack.size();
-    }
-
-    std::vector<LocalVariable> StackSystem::getStack()
-    {
-        return stack;
     }
 
     ByteCodeLine::ByteCodeLine()
@@ -262,13 +291,20 @@ namespace Parser
     {
         received_data = {};
         local_scope = {};
-        stack_system = new StackSystem();
+
+        call_stack_system = new StackSystem<CallStackScope>();
+        opecode_stack_system = new StackSystem<LocalVariable>();
+
+        permission_proceed = true;
     }
     ParserSystem::ParserSystem(SourceCode rd)
     {
         received_data = rd;
         local_scope = {};
-        stack_system = new StackSystem();
+        call_stack_system = new StackSystem<CallStackScope>();
+        opecode_stack_system = new StackSystem<LocalVariable>();
+
+        permission_proceed = true;
     }
     ParserSystem::~ParserSystem()
     {
@@ -278,7 +314,7 @@ namespace Parser
     {
         received_data = rd;
         local_scope = {};
-        stack_system = new StackSystem();
+        opecode_stack_system = new StackSystem<LocalVariable>();
     }
 
     bool ParserSystem::hasProgram(int line, int column)
@@ -479,7 +515,27 @@ namespace Parser
         process();
     }
 
-    LocalVariable ParserSystem::searchLocalVariableInScope(int current_scope_index, int directly_index)
+    LocalVariable ParserSystem::searchLocalVariableInCallStack(int current_stack_index, int directly_index)
+    {
+
+        int search = current_stack_index;
+
+        while (search >= 0)
+        {
+            std::map<int, LocalVariable> lvl = call_stack_system->getVariable(search).getLocalVariableList();
+
+            if (lvl.find(directly_index) != lvl.end())
+            {
+                return lvl[directly_index];
+            }
+
+            search--;
+        }
+
+        throw std::runtime_error("Error: lv is not found. (call stack)");
+    }
+
+    LocalVariable ParserSystem::searchLocalVariableInLocalScope(int current_scope_index, int directly_index)
     {
         int search = current_scope_index;
         while (search >= 0)
@@ -495,6 +551,12 @@ namespace Parser
         }
 
         throw std::runtime_error("Error: Local scope is not found.");
+    }
+
+    void ParserSystem::stop(bool p)
+    {
+        permission_proceed = p;
+        // ここで強制停止処理を行う
     }
 
     void ParserSystem::all_output_local_scope()
@@ -530,13 +592,30 @@ namespace Parser
         }
     }
 
-    void ParserSystem::all_output_stack_system()
+    void ParserSystem::all_output_opecode_stack_system()
     {
         output_debug("* * * * * * all output stack system * * * * * * ");
 
-        for (int i = 0; i < stack_system->size(); i++)
+        for (int i = 0; i < opecode_stack_system->size(); i++)
         {
-            output_debug("-    Stack System", {String(i), String(stack_system->getStack()[i].opcr_type), stack_system->getStack()[i].getCastString()});
+            output_debug("-    Stack System", {String(i), String(opecode_stack_system->getStack()[i].opcr_type), opecode_stack_system->getStack()[i].getCastString()});
+        }
+    }
+
+    void ParserSystem::all_output_call_stack_system()
+    {
+        output_debug("* * * * * * all output call stack system * * * * * * ");
+
+        for (int i = 0; i < call_stack_system->size(); i++)
+        {
+            output_debug("-    Call Stack System", {String(i), String(call_stack_system->getStack()[i].getIndex()), String(call_stack_system->getStack()[i].getScopeType()), String(call_stack_system->getStack()[i].getDirectlyIndex()), String(call_stack_system->getStack()[i].getParentIndex())});
+
+            auto lv_list = call_stack_system->getStack()[i].getLocalVariableList();
+
+            for (auto itr2 = lv_list.begin(); itr2 != lv_list.end(); ++itr2)
+            {
+                output_debug("-        Local Variable VALUE : ", {String(itr2->first), String(itr2->second.getType()), itr2->second.getCastString()});
+            }
         }
     }
 };

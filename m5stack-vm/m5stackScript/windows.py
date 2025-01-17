@@ -3,6 +3,7 @@ import time
 import os
 import threading
 import queue
+import keyboard
 
 # シリアルポートとボーレートの設定
 PORT = 'COM4'  # M5Stackが接続されているポートを指定
@@ -14,10 +15,20 @@ command_queue = queue.Queue()
 def input_thread(queue):
     """非同期でユーザー入力を取得し、キューに格納するスレッド"""
     while True:
+
         user_input = input()  # ユーザー入力を取得
         queue.put(user_input)  # キューに格納
         if user_input.lower() == "exit":
             break
+
+def input_stop(queue):
+    while True:
+        if keyboard.is_pressed("end"):  # 'q'キーが押された場合
+            queue.put("##stop_program")  # キューに格納
+            print("##stop_program 強制停止命令を送信しました")
+            time.sleep(1)
+            
+
 
 # シリアルポートを初期化
 try:
@@ -29,6 +40,7 @@ except serial.SerialException as e:
 
 # 非同期入力スレッドの開始
 threading.Thread(target=input_thread, args=(command_queue,), daemon=True).start()
+# threading.Thread(target=input_stop, args=(command_queue,), daemon=True).start()
 
 print("Type 'exit' to quit.")
 print("Enter a command (e.g., 'input filename') or wait for messages:")
