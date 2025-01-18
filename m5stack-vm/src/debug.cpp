@@ -7,7 +7,7 @@ int message_all_count = 0;
 // 0 : GUI
 // 1 : minimal CLI
 // 2 : full CLI
-bool is_debug_mode_level = 2;
+int is_debug_mode_level = 2;
 
 void output_debug(String message, vint message_int)
 {
