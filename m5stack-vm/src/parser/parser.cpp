@@ -20,39 +20,6 @@ namespace Parser
         return decimalValue;      // unsigned intに変換
     };
 
-    LocalVariable::LocalVariable()
-    {
-        this->opcr_type = Bytecode::Opecode::d_int;
-        this->store_type = store_type_map[Bytecode::Opecode::d_int];
-
-        this->intValue = 0;
-        this->floatValue = 0.0;
-        this->booleanValue = false;
-        this->stringValue = nullptr;
-        this->vectorIntValue = nullptr;
-        this->vectorStringValue = nullptr;
-    }
-
-    LocalVariable::LocalVariable(Bytecode::opcr type)
-    {
-        this->opcr_type = type;
-
-        if (!hasStoreTypeMap(type))
-        {
-            output_debug(String(type));
-            throw std::runtime_error("Error: Type is not matched. (constructor opcr)");
-        }
-
-        this->store_type = store_type_map[type];
-
-        this->intValue = 0;
-        this->floatValue = 0.0;
-        this->booleanValue = false;
-        this->stringValue = nullptr;
-        this->vectorIntValue = nullptr;
-        this->vectorStringValue = nullptr;
-    }
-
     ScopeSystem::ScopeSystem()
     {
         children = {};
@@ -297,6 +264,8 @@ namespace Parser
         opecode_stack_system = new StackSystem<LocalVariable>();
         class_scope = {};
 
+        dom_system = new DOM_Tree::DomSystem();
+
         permission_proceed = true;
     }
     ParserSystem::ParserSystem(SourceCode rd)
@@ -305,8 +274,10 @@ namespace Parser
         local_scope = {};
         call_stack_system = new StackSystem<CallStackScope>();
         opecode_stack_system = new StackSystem<LocalVariable>();
-        class_scope = {};
 
+        dom_system = new DOM_Tree::DomSystem();
+
+        class_scope = {};
         permission_proceed = true;
     }
     ParserSystem::~ParserSystem()
@@ -621,4 +592,26 @@ namespace Parser
             }
         }
     }
+
+    void ParserSystem::all_output_dom_system()
+    {
+        output_debug("* * * * * * all output dom system * * * * * * ");
+
+        for (int i = 0; i < dom_system->domSize(); i++)
+        {
+            DOM_Tree::DomNode dn = dom_system->getDomNode(i);
+            output_debug("-    Dom System", {String(i), dn.getTag(), dn.getTextContent(), String(dn.getOpecodeStackLen())});
+            std::map<String, LocalVariable> attributes = dn.getAttributes();
+            for (auto itr = attributes.begin(); itr != attributes.end(); ++itr)
+            {
+                output_debug("-        Attribute", {itr->first, itr->second.getCastString()});
+            }
+            vint children = dn.getChildren();
+            for (int j = 0; j < children.size(); j++)
+            {
+                output_debug("-        Children", {String(children[j])});
+            }
+        }
+    }
+
 };

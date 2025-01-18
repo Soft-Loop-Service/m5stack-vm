@@ -169,7 +169,6 @@ void output_lcd_clear()
 
 void output_debug_common()
 {
-
     int max_size = 28;
 
     if (is_debug_mode_level > 0)
@@ -213,4 +212,22 @@ void output_debug_mode(int level)
         output_message("Debug mode is changed.");
         output_debug_common();
     }
+}
+
+void output_debug_memory()
+{
+    if (is_debug_mode_level != 2)
+    {
+        return;
+    }
+
+    // 総空きヒープメモリ
+    size_t freeHeap = esp_get_free_heap_size();
+    // 最小空きヒープメモリ（ヒープメモリ使用ピークを把握）
+    size_t minFreeHeap = esp_get_minimum_free_heap_size();
+
+    // メモリ情報を表示
+    output_message("=== Memory Info ===");
+    output_message("Free Heap: %d bytes\n", freeHeap);
+    output_message("Minimum Free Heap: %d bytes\n", minFreeHeap);
 }

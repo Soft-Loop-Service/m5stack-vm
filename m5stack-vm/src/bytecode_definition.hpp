@@ -19,6 +19,7 @@ namespace Bytecode
         const opcr d_class = 800;    // クラスやコンポーネントなど、インスタンス化できるもの。
         const opcr d_boolean = 900;
         const opcr d_json = 1000;
+        const opcr d_pair = 1100;
 
         // opcr resolvOpecrType(String type, vstring token_class_type);
         // opcr resolvOpecrType(String type);
@@ -95,6 +96,7 @@ namespace Bytecode
         // const opcr h_dom_render = 130;
         const opcr h_dom_start = 130; // 第1引数HTML TAG 第2引数 attribute_count
         const opcr h_dom_end = 132;   // 第1引数HTML TAG
+        const opcr h_to_html = 133;   // スタッフトップにある内容をHTMLに出力する命令
 
         // ほかの関数コンポーネントを呼び出す 基本的にはs_invokevirtualと同じ
         // この命令より前に、スタックに引数→対象関数を積んでおく

@@ -23,4 +23,7 @@ void output_lcd_clear();
 void send_debug_message(String);
 
 void output_debug_mode(int);
+
+void output_debug_memory();
+
 #endif

@@ -3,6 +3,7 @@
 #include "./../built_in/built_function.hpp"
 #include "M5Core2.h"
 #include <stdexcept>
+#include "./local_variable.hpp"
 
 namespace Parser
 {
@@ -32,6 +33,7 @@ namespace Parser
 
         for (int i = p_current_call_stack->getReturnPoint(); i < current_bytecode.size(); i++)
         {
+            output_debug_memory();
             if (permission_proceed == false)
             {
                 return;
@@ -439,6 +441,107 @@ namespace Parser
                 break;
             }
 
+            case Bytecode::Opecode::h_dom_start:
+            {
+                output_debug("H_DOM_START | ", {"H_DOM_START VALUE"});
+
+                String tag = current_bytecode[i].getOperand(1);
+                int attribute_count = current_bytecode[i].getOperandInt(2);
+
+                output_debug("H_DOM_START | ", {"H_DOM_START 1"});
+
+                DOM_Tree::DomNode new_node(tag);
+
+                for (int i = 0; i < attribute_count; i++)
+                {
+                    LocalVariable name = opecode_stack_system->pop();
+                    LocalVariable json = opecode_stack_system->pop();
+
+                    output_debug("H_DOM_START | ", {"H_DOM_START 2"});
+
+                    new_node.setAttribute(name.getValueString(), json);
+
+                    output_debug("H_DOM_START | ", {"H_DOM_START 3"});
+                }
+
+                output_debug("H_DOM_START | ", {"H_DOM_START 4"});
+                new_node.setOpecodeStackLen(opecode_stack_system->size());
+                output_debug("H_DOM_START | ", {"H_DOM_START 5"});
+
+                int dom_index = dom_system->addDomNodeTree(new_node);
+                output_debug("H_DOM_START | ", {"H_DOM_START 6"});
+                break;
+            }
+            case Bytecode::Opecode::h_dom_end:
+            {
+                output_debug("H_DOM_END | ", {"H_DOM_END VALUE"});
+
+                int opecode_stack_current_size = opecode_stack_system->size();
+                int opecode_stack_dom_size = dom_system->getTopSelectNode().getOpecodeStackLen(); // こっちのほうが少ないはず
+
+                std::vector<LocalVariable> local_variable_list = {};
+
+                for (int i = 0; i < opecode_stack_current_size - opecode_stack_dom_size; i++)
+                {
+                    LocalVariable lvp = opecode_stack_system->pop();
+                    local_variable_list.push_back(lvp);
+                }
+
+                for (int i = local_variable_list.size() - 1; i >= 0; i--)
+                {
+                    int dom_index = dom_system->addDomNodeTree(DOM_Tree::DomNode(local_variable_list[i].getValueString()));
+                    dom_system->getTopSelectNode().addChild(dom_index);
+                }
+
+                dom_system->climbNode();
+                break;
+            }
+
+            case Bytecode::Opecode::h_to_html:
+            {
+                output_debug("H_TO_HTML | ", {"H_TO_HTML VALUE"});
+                LocalVariable local_variable_1 = opecode_stack_system->pop(); // topから 1 pair
+
+                dom_system->setTopDomNodeTextContent(local_variable_1.getValueString());
+                break;
+            }
+
+            case Bytecode::Opecode::j_construction:
+            {
+                output_debug("J_CONST | ", {"J_CONST VALUE"});
+                LocalVariable local_variable_1 = opecode_stack_system->pop(); // key
+                LocalVariable local_variable_2 = opecode_stack_system->pop(); // value
+
+                LocalVariable new_local_variable(Bytecode::Opecode::d_pair);
+
+                new_local_variable.setValue(std::make_pair(local_variable_1.getValueString(), local_variable_2));
+
+                opecode_stack_system->push(new_local_variable);
+                break;
+            }
+            case Bytecode::Opecode::j_series:
+            {
+                output_debug("J_SERIES | ", {"J_SERIES VALUE"});
+                LocalVariable local_variable_1 = opecode_stack_system->pop(); // topから 1 pair
+                LocalVariable local_variable_2 = opecode_stack_system->pop(); // topから 2 pair | map
+
+                output_debug("J_SERIES | ", {local_variable_1.getType(), local_variable_2.getType(), local_variable_2.isMap()});
+
+                if (local_variable_2.isMap())
+                {
+                    local_variable_2.addMapValue(local_variable_1.getPairValue());
+                    opecode_stack_system->push(local_variable_2);
+                    break;
+                }
+
+                LocalVariable new_local_variable(Bytecode::Opecode::d_json);
+                new_local_variable.setMapByPair(local_variable_1.getPairValue());
+                new_local_variable.addMapValue(local_variable_2.getPairValue());
+                opecode_stack_system->push(new_local_variable);
+
+                break;
+            }
+
             case Bytecode::Opecode::s_if_acmpeq:
             {
 
@@ -835,8 +938,11 @@ namespace Parser
             }
 
             default:
+            {
                 break;
             }
+            }
+            all_output_opecode_stack_system();
         }
 
         call_stack_system->pop();
@@ -844,6 +950,7 @@ namespace Parser
         // all_output_local_scope();
         all_output_opecode_stack_system();
         all_output_call_stack_system();
+        all_output_dom_system();
     }
 
     void ParserSystem::process()
