@@ -18,6 +18,7 @@ namespace Bytecode
         const opcr d_function = 700; // 関数
         const opcr d_class = 800;    // クラスやコンポーネントなど、インスタンス化できるもの。
         const opcr d_boolean = 900;
+        const opcr d_json = 1000;
 
         // opcr resolvOpecrType(String type, vstring token_class_type);
         // opcr resolvOpecrType(String type);
@@ -56,7 +57,7 @@ namespace Bytecode
         // 引数の数はVM側で決める
         const opcr s_special_invokevirtual = 24;
 
-                // ローカル変数関連
+        // ローカル変数関連
 
         // オペランドスタック → ローカル変数
         // 第1引数は型
@@ -90,6 +91,17 @@ namespace Bytecode
         // スタックトップにある値がtrueかfalseかで分岐
         const opcr s_if_true = 120;
         const opcr s_if_false = 121;
+
+        // const opcr h_dom_render = 130;
+        const opcr h_dom_start = 130; // 第1引数HTML TAG 第2引数 attribute_count
+        const opcr h_dom_end = 132;   // 第1引数HTML TAG
+
+        // ほかの関数コンポーネントを呼び出す 基本的にはs_invokevirtualと同じ
+        // この命令より前に、スタックに引数→対象関数を積んでおく
+        // const opcr h_dom_render = 132;
+
+        const opcr j_construction = 140; // json key:value 構築命令 スタックを2つ取得して構築した 組の参照をスタックに積む
+        const opcr j_series = 141;       // json key:value 構築命令 スタックを2つ取得して 直列につなぐ 結果をスタックに積む
 
         // 第1引数は directly_index
         const opcr head_start_function = 240;

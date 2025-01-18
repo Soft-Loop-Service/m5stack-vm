@@ -145,7 +145,9 @@ namespace Parser
             BOOLEAN,
             STRING,
             VINT,
-            VSTRING
+            VSTRING,
+            VFLOAT,
+            MAP
         } store_type;
         union
         {
@@ -155,6 +157,8 @@ namespace Parser
             String *stringValue;
             vint *vectorIntValue;
             vstring *vectorStringValue;
+            vfloat *vectorFloatValue;
+            std::map<String, LocalVariable> *mapValue;
         };
 
         std::map<Bytecode::opcr, ValueType> store_type_map = {
@@ -166,7 +170,8 @@ namespace Parser
             {Bytecode::Opecode::d_html_dom, STRING},
             {Bytecode::Opecode::d_function, INT},
             {Bytecode::Opecode::d_class, INT},
-            {Bytecode::Opecode::d_boolean, BOOLEAN}};
+            {Bytecode::Opecode::d_boolean, BOOLEAN},
+            {Bytecode::Opecode::d_json, MAP}};
 
         LocalVariable();
         LocalVariable(Bytecode::opcr);
@@ -194,6 +199,13 @@ namespace Parser
             case VSTRING:
                 vectorStringValue = other.vectorStringValue ? new vstring(*other.vectorStringValue) : nullptr;
                 break;
+            case VFLOAT:
+                vectorFloatValue = other.vectorFloatValue ? new vfloat(*other.vectorFloatValue) : nullptr;
+                break;
+            case MAP:
+                mapValue = other.mapValue ? new std::map<String, LocalVariable>(*other.mapValue) : nullptr;
+                break;
+
             default:
                 break;
             }
@@ -218,6 +230,16 @@ namespace Parser
             {
                 delete vectorStringValue;
                 vectorStringValue = nullptr;
+            }
+            else if (store_type == VFLOAT && vectorFloatValue != nullptr)
+            {
+                delete vectorFloatValue;
+                vectorFloatValue = nullptr;
+            }
+            else if (store_type == MAP && mapValue != nullptr)
+            {
+                delete mapValue;
+                mapValue = nullptr;
             }
 
             // store_typeをデフォルトのINTにリセット
@@ -248,6 +270,16 @@ namespace Parser
             {
                 delete vectorStringValue;
                 vectorStringValue = nullptr;
+            }
+            else if (store_type == VFLOAT && vectorFloatValue != nullptr)
+            {
+                delete vectorFloatValue;
+                vectorFloatValue = nullptr;
+            }
+            else if (store_type == MAP && mapValue != nullptr)
+            {
+                delete mapValue;
+                mapValue = nullptr;
             }
 
             // store_typeをデフォルトのINTにリセット
@@ -298,12 +330,12 @@ namespace Parser
 
             case FLOAT:
             {
-                vectorIntValue = new vint();
+                vectorFloatValue = new vfloat();
 
                 for (int i = 0; i < args.size(); i++)
                 {
                     canConvertToFloatTry(args[i]);
-                    vectorIntValue->push_back(args[i].toFloat());
+                    vectorFloatValue->push_back(args[i].toFloat());
                 }
 
                 break;
@@ -402,6 +434,18 @@ namespace Parser
             store_type = VSTRING;
             vectorStringValue = new vstring(value);
         }
+        void setValue(const vfloat value)
+        {
+            clear();
+            store_type = VFLOAT;
+            vectorFloatValue = new vfloat(value);
+        }
+        void setValue(const std::map<String, LocalVariable> value)
+        {
+            clear();
+            store_type = MAP;
+            mapValue = new std::map<String, LocalVariable>(value);
+        }
 
         int getValueInt() const
         {
@@ -436,6 +480,52 @@ namespace Parser
         Bytecode::opcr getType() const
         {
             return opcr_type;
+        }
+
+        Bytecode::opcr getStoreType() const
+        {
+            return store_type;
+        }
+
+        void setMapValue(String name, LocalVariable lv)
+        {
+            // mapか確認
+            if (store_type != MAP)
+            {
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+            mapValue->insert(std::make_pair(name, lv));
+        }
+
+        bool isMap()
+        {
+            return store_type == MAP;
+        }
+
+        bool hasMapValue(String name)
+        {
+            // mapか確認
+            if (store_type != MAP)
+            {
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+            return mapValue->find(name) != mapValue->end();
+        }
+
+        LocalVariable getMapValue(String name)
+        {
+
+            // mapか確認
+            if (store_type != MAP)
+            {
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+            if (mapValue->find(name) == mapValue->end())
+            {
+                throw std::runtime_error("Error: Map key is not found.");
+            }
+
+            return mapValue->at(name);
         }
 
         String getCastString()
@@ -479,7 +569,30 @@ namespace Parser
                 }
                 return rv;
             }
+            case VFLOAT:
+            {
+                String rv;
+                for (int i = 0; i < vectorFloatValue->size(); i++)
+                {
+                    rv += String((*vectorFloatValue)[i]);
+                    if (i != vectorFloatValue->size() - 1)
+                        rv += ",";
+                }
+                return rv;
+            }
+            case MAP:
+            {
+                String rv;
+                for (auto it = mapValue->begin(); it != mapValue->end(); it++)
+                {
+                    rv += String(it->first) + ":" + it->second.getCastString();
+                    if (it != --mapValue->end())
+                        rv += ",";
+                }
+                return rv;
+            }
             default:
+                std::runtime_error("Error: Type is not matched. (unknown)");
                 return "unknown";
             }
         }

@@ -18,6 +18,7 @@ typedef std::vector<String> vstring;
 typedef std::vector<std::vector<String>> v2string;
 
 typedef std::vector<int> vint;
+typedef std::vector<float> vfloat;
 typedef std::vector<std::vector<int>> v2int;
 typedef std::vector<std::vector<std::vector<int>>> v3int;
 typedef std::vector<std::vector<std::vector<std::vector<int>>>> v4int;
