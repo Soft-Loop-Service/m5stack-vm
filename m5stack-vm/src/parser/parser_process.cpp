@@ -848,7 +848,7 @@ namespace Parser
 
     void ParserSystem::process()
     {
-        output_debug("Process is started.");
+        output_message("Process is started.");
 
         call_stack_system->push(CallStackScope(local_scope[0], 0));
         while (call_stack_system->has())
@@ -862,6 +862,6 @@ namespace Parser
             recursionProcess();
         }
 
-        output_debug("Process is ended.");
+        output_message("Process is ended.");
     }
 };

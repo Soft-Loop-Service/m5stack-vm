@@ -295,6 +295,7 @@ namespace Parser
 
         call_stack_system = new StackSystem<CallStackScope>();
         opecode_stack_system = new StackSystem<LocalVariable>();
+        class_scope = {};
 
         permission_proceed = true;
     }
@@ -304,6 +305,7 @@ namespace Parser
         local_scope = {};
         call_stack_system = new StackSystem<CallStackScope>();
         opecode_stack_system = new StackSystem<LocalVariable>();
+        class_scope = {};
 
         permission_proceed = true;
     }

@@ -11,6 +11,7 @@ namespace Parser
 {
     class LocalVariable;
     class LocalScope;
+    class ScopeSystem;
 
     template <typename T>
     class Store
@@ -591,8 +592,12 @@ namespace Parser
         // token分割したフラットなバイトコード
         SourceCode received_data;
 
-        // クラスや変数の上下関係・スコープを管理する
+        // クラスや変数の上下関係・スコープを管理する 設計図
         std::map<int, LocalScope> local_scope;
+
+        // クラス等をインスタンス化したものを管理。keyはinstance ID
+        // CallStackScope内変数にはこのkeyを挿入する
+        std::map<int, LocalScope> class_scope;
 
         // スタックマシン 演算機能を持つ
         StackSystem<LocalVariable> *opecode_stack_system;

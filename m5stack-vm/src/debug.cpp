@@ -169,22 +169,27 @@ void output_lcd_clear()
 
 void output_debug_common()
 {
-    if (message_list.size() > 28)
-    {
-        // delay(100);
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.fillScreen(BLACK);
-        message_list.erase(message_list.begin());
-    }
+
+    int max_size = 28;
 
     if (is_debug_mode_level > 0)
     {
-        for (int i = 0; i < message_list.size(); i++)
+        if (message_list.size() > max_size)
         {
-            M5.Lcd.printf("%d: %s\n", message_all_count + i, message_list[i].c_str());
+            // delay(100);
+            M5.Lcd.setCursor(0, 0);
+            M5.Lcd.fillScreen(BLACK);
+            message_list.erase(message_list.begin());
+            for (int i = 0; i < message_list.size(); i++)
+            {
+                M5.Lcd.printf("%d: %s\n", message_all_count + i, message_list[i].c_str());
+            }
+        }
+        else
+        {
+            M5.Lcd.printf("%d: %s\n", message_all_count, message_list.back().c_str());
         }
     }
-
     message_all_count++;
 }
 
