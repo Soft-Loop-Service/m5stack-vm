@@ -97,18 +97,13 @@ void processLine(String line)
       output_debug("code_clear is completed.");
       return;
     }
-    else if (tokens[0] == "##modeCLI" || tokens[0] == "##modeCUI")
+    else if (tokens[0] == "##debug_mode")
     {
-      output_mode_cli();
+      output_debug_mode(tokens[1].toInt());
       output_debug("CLI mode is implemented.");
       return;
     }
-    else if (tokens[0] == "##modeGUI")
-    {
-      output_mode_gui();
-      output_debug("GUI mode is implemented.");
-      return;
-    }
+
     else if (tokens[0] == "##all_output_local_scope")
     {
       parser->all_output_local_scope();
