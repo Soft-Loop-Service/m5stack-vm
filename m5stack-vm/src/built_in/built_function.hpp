@@ -3,12 +3,14 @@
 #define __BUILT_FUNCTION
 
 #include "./../bytecode_definition.hpp"
-#include <sstream>
 #include "./../debug.hpp"
 // フラットパーサー
 
-namespace Parser
+namespace BuiltIn
 {
+    namespace BuiltInFunction
+    {
+        void built_print(String);
+    };
 };
-
 #endif

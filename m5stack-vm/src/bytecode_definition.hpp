@@ -22,9 +22,9 @@ namespace Bytecode
         // opcr resolvOpecrType(String type, vstring token_class_type);
         // opcr resolvOpecrType(String type);
 
-        const opcr bool_false = 0;
-        const opcr bool_true = 1;
-        const opcr value_null = 2;
+        const opcr value_null = 0;
+        const opcr bool_true = 5;
+        const opcr bool_false = 6;
 
         // ******
 
@@ -51,7 +51,12 @@ namespace Bytecode
         // 第二引数以降は 候補となる   TYPE NAME の繰り替えし
         const opcr s_inside = 23;
 
-        // ローカル変数関連
+        // 組み込み関数呼び出し
+        // 第1引数は特殊関数のID
+        // 引数の数はVM側で決める
+        const opcr s_special_invokevirtual = 24;
+
+                // ローカル変数関連
 
         // オペランドスタック → ローカル変数
         // 第1引数は型

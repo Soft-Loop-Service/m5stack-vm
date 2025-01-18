@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
+#include "./../built_in/built_function.hpp"
 #include "M5Core2.h"
 #include <stdexcept>
 
@@ -103,6 +104,19 @@ namespace Parser
 
             case Bytecode::Opecode::s_instance:
             {
+                break;
+            }
+
+            case Bytecode::Opecode::s_special_invokevirtual:
+            {
+                int function_id = current_bytecode[i].getOperand(1).toInt();
+
+                if (function_id == 1)
+                {
+                    LocalVariable local_variable = opecode_stack_system->pop();
+                    BuiltIn::BuiltInFunction::built_print(local_variable.getCastString());
+                }
+
                 break;
             }
 

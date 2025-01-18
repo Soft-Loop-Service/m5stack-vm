@@ -195,7 +195,17 @@ void send_debug_message(String message)
 
 void output_debug_mode(int level)
 {
-    output_lcd_clear();
     is_debug_mode_level = level;
-    output_debug_common();
+    if (level == 0)
+    {
+        output_lcd_clear();
+        output_debug_clear();
+    }
+    else
+    {
+        output_lcd_clear();
+        output_debug_clear();
+        output_message("Debug mode is changed.");
+        output_debug_common();
+    }
 }

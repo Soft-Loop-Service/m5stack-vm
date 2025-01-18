@@ -1,5 +1,6 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
+#include "./../built_in/built_function.hpp"
 #include "M5Core2.h"
 #include <stdexcept>
 

@@ -99,8 +99,9 @@ void processLine(String line)
     }
     else if (tokens[0] == "##debug_mode")
     {
+
+      output_debug("debug_mode mode is implemented.");
       output_debug_mode(tokens[1].toInt());
-      output_debug("CLI mode is implemented.");
       return;
     }
 
