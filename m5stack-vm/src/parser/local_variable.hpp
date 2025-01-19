@@ -147,7 +147,7 @@ namespace Parser
         ~LocalVariable()
         {
             // output_debug("LocalVariable is deleted.", {getCastString()});
-            clear();
+            // clear();
         }
 
         void setValueAnalysis(vstring args)
@@ -304,7 +304,7 @@ namespace Parser
         {
             clear();
             store_type = MAP;
-            mapValue = new std::map<String, LocalVariable>();
+            mapValue = new std::map<String, LocalVariable>;
             mapValue->insert(value);
         }
         int getValueInt() const

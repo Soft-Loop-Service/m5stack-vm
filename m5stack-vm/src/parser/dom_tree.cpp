@@ -39,12 +39,10 @@ namespace Parser
 
         DomNode::~DomNode()
         {
-            output_debug("DomNode is deleted. A");
             // 安全に各要素を削除
             this->children.clear();
-            output_debug("DomNode is deleted. B");
-            this->attributes.clear();
-            output_debug("DomNode is deleted. C");
+            // this->attributes.clear();
+            // output_debug("DomNode is deleted. C");
         }
 
         int DomNode::getDomIndex()

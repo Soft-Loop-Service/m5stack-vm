@@ -41,7 +41,7 @@ namespace Parser
 
             Bytecode::opcr opcode = current_bytecode[i].getOpecode();
 
-            output_debug("Opcode", {opcode});
+            output_debug("Opcode", {i, opcode});
 
             switch (opcode)
             {
@@ -448,8 +448,6 @@ namespace Parser
                 String tag = current_bytecode[i].getOperand(1);
                 int attribute_count = current_bytecode[i].getOperandInt(2);
 
-                output_debug("H_DOM_START | ", {"H_DOM_START 1"});
-
                 DOM_Tree::DomNode new_node(tag);
 
                 for (int i = 0; i < attribute_count; i++)
@@ -457,19 +455,12 @@ namespace Parser
                     LocalVariable name = opecode_stack_system->pop();
                     LocalVariable json = opecode_stack_system->pop();
 
-                    output_debug("H_DOM_START | ", {"H_DOM_START 2"});
-
                     new_node.setAttribute(name.getValueString(), json);
-
-                    output_debug("H_DOM_START | ", {"H_DOM_START 3"});
                 }
 
-                output_debug("H_DOM_START | ", {"H_DOM_START 4"});
                 new_node.setOpecodeStackLen(opecode_stack_system->size());
-                output_debug("H_DOM_START | ", {"H_DOM_START 5"});
 
                 int dom_index = dom_system->addDomNodeTree(new_node);
-                output_debug("H_DOM_START | ", {"H_DOM_START 6"});
                 break;
             }
             case Bytecode::Opecode::h_dom_end:

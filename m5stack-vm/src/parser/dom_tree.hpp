@@ -31,6 +31,13 @@ namespace Parser
 
             // tag_name ,attributes
             DomNode(String, LocalVariable);
+
+            // コピーコンストラクタ
+            DomNode(const DomNode &other)
+                : dom_index(other.dom_index), parent_index(other.parent_index), children(other.children), attributes(other.attributes), tag(other.tag), text_content(other.text_content), call_stack_len(other.call_stack_len)
+            {
+            }
+
             ~DomNode();
 
             int getDomIndex();

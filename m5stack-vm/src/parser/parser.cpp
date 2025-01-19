@@ -219,6 +219,7 @@ namespace Parser
         int index = 1;
         if (index >= operand_list.size())
         {
+            output_debug({"ERROR getOperandType(T) : ", String(index), String(operand_list.size())});
             throw std::runtime_error("Error: Operand index is out of range.");
         }
         canConvertToIntTry(operand_list[index]);
@@ -229,6 +230,7 @@ namespace Parser
     {
         if (index >= operand_list.size())
         {
+            output_debug({"ERROR getOperandType : ", String(index), String(operand_list.size())});
             throw std::runtime_error("Error: Operand index is out of range.");
         }
         canConvertToIntTry(operand_list[index]);
@@ -239,6 +241,7 @@ namespace Parser
     {
         if (index >= operand_list.size())
         {
+            output_debug({"ERROR getOperandInt : ", String(index), String(operand_list.size())});
             throw std::runtime_error("Error: Operand index is out of range.");
         }
 
@@ -250,6 +253,7 @@ namespace Parser
     {
         if (index >= operand_list.size())
         {
+            output_debug({"ERROR getOperand : ", String(index), String(operand_list.size())});
             throw std::runtime_error("Error: Operand index is out of range.");
         }
         return operand_list[index];
@@ -600,7 +604,7 @@ namespace Parser
         for (int i = 0; i < dom_system->domSize(); i++)
         {
             DOM_Tree::DomNode dn = dom_system->getDomNode(i);
-            output_debug("-    Dom System", {String(i), dn.getTag(), dn.getTextContent(), String(dn.getOpecodeStackLen())});
+            output_debug("-    Dom System", {String(i), "tag:", dn.getTag(), "cot:", dn.getTextContent(), "osl:", String(dn.getOpecodeStackLen())});
             std::map<String, LocalVariable> attributes = dn.getAttributes();
             for (auto itr = attributes.begin(); itr != attributes.end(); ++itr)
             {
