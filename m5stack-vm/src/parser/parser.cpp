@@ -490,6 +490,8 @@ namespace Parser
         }
         output_message("Bytecode import is created.");
 
+        all_output_local_scope();
+
         // バイトコードの実行
         process();
     }

@@ -27,6 +27,16 @@ namespace Parser
             this->call_stack_len = 0;
         }
 
+        DomNode::DomNode(LocalVariable text)
+        {
+            this->dom_index = 0;
+            this->tag = tag;
+            this->text_content = text.getCastString();
+            this->children = {};
+            this->attributes = {};
+            this->parent_index = -1;
+            this->call_stack_len = 0;
+        }
         DomNode::DomNode(String tag, LocalVariable attributes)
         {
             this->dom_index = 0;

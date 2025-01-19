@@ -31,6 +31,8 @@ namespace Parser
             // tag_name
             DomNode(String);
 
+            // text
+            DomNode(LocalVariable);
             // tag_name ,attributes
             DomNode(String, LocalVariable);
 

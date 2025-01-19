@@ -245,7 +245,7 @@ namespace Parser
         // token分割したフラットなバイトコード
         SourceCode received_data;
 
-        // クラスや変数の上下関係・スコープを管理する 設計図
+        // クラスや変数の上下関係・スコープを管理する 設計図 keyはscope index
         std::map<int, LocalScope> local_scope;
 
         // クラス等をインスタンス化したものを管理。keyはinstance ID
@@ -290,6 +290,8 @@ namespace Parser
         LocalVariable searchLocalVariableInLocalScope(int, int);
 
         void parser();
+
+        int resolveDirectlyIndexToLocalScope(int);
 
         void recursionProcess();
         void process();

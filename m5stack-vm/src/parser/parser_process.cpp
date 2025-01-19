@@ -7,6 +7,31 @@
 
 namespace Parser
 {
+    int ParserSystem::resolveDirectlyIndexToLocalScope(int directly_index)
+    {
+        // local_scope iterator
+
+        for (auto itr = local_scope.begin(); itr != local_scope.end(); ++itr)
+        {
+            if (itr->second.getDirectlyIndex() == directly_index)
+            {
+                output_debug("Resolve Directly Index to Local Scope", {directly_index, itr->first});
+
+                return itr->first;
+            }
+        }
+
+        throw std::runtime_error("Error: Directly index is not found.");
+
+        // for (int i = 0; i < local_scope.size(); i++)
+        // {
+        //     if (local_scope[i].getDirectlyIndex() == local_stack_index)
+        //     {
+
+        //     }
+        // }
+    }
+
     void ParserSystem::recursionProcess()
     {
 
@@ -15,7 +40,7 @@ namespace Parser
         output_debug("Recursion Process", {
                                               p_current_call_stack->getIndex(),
                                               p_current_call_stack->getReturnPoint(),
-                                              (int)local_scope[p_current_call_stack->getIndex()].getByteCode().size(),
+                                              (int)(local_scope[p_current_call_stack->getIndex()].getByteCode().size()),
                                           });
 
         std::vector<ByteCodeLine> current_bytecode = local_scope[p_current_call_stack->getIndex()].getByteCode();
@@ -86,11 +111,12 @@ namespace Parser
                 }
 
                 int function_index = local_variable.getValueInt();
+                int function_scope_index = resolveDirectlyIndexToLocalScope(function_index);
 
                 // recursionProcess();
 
                 p_current_call_stack->setReturnPoint(i + 1);
-                call_stack_system->push(CallStackScope(local_scope[function_index], 0));
+                call_stack_system->push(CallStackScope(local_scope[function_scope_index], 0));
 
                 return;
             }
@@ -446,7 +472,7 @@ namespace Parser
 
                 DOM_Tree::DomNode new_node(tag);
 
-                for (int i = 0; i < attribute_count; i++)
+                for (int ac = 0; ac < attribute_count; ac++)
                 {
                     LocalVariable name = opecode_stack_system->pop();
                     LocalVariable json = opecode_stack_system->pop();
@@ -461,24 +487,42 @@ namespace Parser
             }
             case Bytecode::Opecode::h_dom_end:
             {
-                output_debug("H_DOM_END | ", {"H_DOM_END VALUE"});
+                output_message("H_DOM_END | ", {"H_DOM_END VALUE"});
 
                 int opecode_stack_current_size = opecode_stack_system->size();
                 int opecode_stack_dom_size = dom_system->getTopSelectNode().getOpecodeStackLen(); // こっちのほうが少ないはず
 
                 std::vector<LocalVariable> local_variable_list = {};
 
-                for (int i = 0; i < opecode_stack_current_size - opecode_stack_dom_size; i++)
+                output_message("H_DOM_END", {opecode_stack_current_size, opecode_stack_dom_size, opecode_stack_current_size - opecode_stack_dom_size});
+
+                // コールスタックをoutput_message
+
+                for (int osc_i = 0; osc_i < opecode_stack_current_size; osc_i++)
                 {
-                    LocalVariable lvp = opecode_stack_system->pop();
-                    local_variable_list.push_back(lvp);
+                    LocalVariable lvp = opecode_stack_system->getVariable(osc_i);
+                    output_message("CALL STACK : H_DOM_END | ", {lvp.getCastString()});
                 }
 
-                for (int i = local_variable_list.size() - 1; i >= 0; i--)
+                output_message("H_DOM_END-2", {"H_DOM_END VALUE"});
+
+                for (int osc_i = 0; osc_i < opecode_stack_current_size - opecode_stack_dom_size; osc_i++)
                 {
-                    int dom_index = dom_system->addDomNodeTree(DOM_Tree::DomNode(local_variable_list[i].getValueString()));
-                    dom_system->getTopSelectNode().addChild(dom_index);
+                    local_variable_list.push_back(opecode_stack_system->pop());
                 }
+
+                output_message("H_DOM_END-3", {"H_DOM_END VALUE"});
+
+                for (int osc_i = local_variable_list.size() - 1; osc_i >= 0; osc_i--)
+                {
+                    int dom_index = dom_system->addDomNodeTree(DOM_Tree::DomNode(local_variable_list[osc_i]));
+
+                    output_message("H_DOM_END-3-1", {local_variable_list[osc_i].getCastString()});
+                    dom_system->getTopSelectNode().addChild(dom_index);
+                    output_message("H_DOM_END-3-2", {local_variable_list[osc_i].getCastString()});
+                }
+
+                output_message("H_DOM_END-4", {"H_DOM_END VALUE"});
 
                 dom_system->climbNode();
                 break;
