@@ -1,7 +1,7 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
 #include "./../built_in/built_function.hpp"
-#include "M5Core2.h"
+#include <M5Core2.h>
 #include <stdexcept>
 
 namespace Parser
@@ -269,8 +269,6 @@ namespace Parser
         class_scope = {};
 
         dom_system = new DOM_Tree::DomSystem();
-
-        permission_proceed = true;
     }
     ParserSystem::ParserSystem(SourceCode rd)
     {
@@ -282,7 +280,6 @@ namespace Parser
         dom_system = new DOM_Tree::DomSystem();
 
         class_scope = {};
-        permission_proceed = true;
     }
     ParserSystem::~ParserSystem()
     {
@@ -372,6 +369,8 @@ namespace Parser
         int start_flag_latest_line = -1;
         int end_flag_first_line = -1;
 
+        output_message("Start parser.", {(int)received_data.size()});
+
         // 不完全ではないか確認
         for (int i = 0; i < received_data.size(); i++)
         {
@@ -398,7 +397,7 @@ namespace Parser
         }
         else
         {
-            output_debug("Program is complete.", {start_flag_latest_line, end_flag_first_line});
+            output_message("Program is complete.", {start_flag_latest_line, end_flag_first_line});
         }
 
         // ここから
@@ -425,6 +424,8 @@ namespace Parser
 
         received_data = received_data_copy;
 
+        output_message("Program is copied. (received_data)", {(int)received_data.size()});
+
         for (int i = 0; i < received_data.size(); i++)
         {
 
@@ -448,11 +449,11 @@ namespace Parser
                     local_scope[local_stack_index].addLocalVariable(type, variable_unique_id);
                 }
 
-                output_debug("Local scope", {i, local_stack_index, scope_type, directly_index, parent_index});
+                output_message("Local scope", {i, local_stack_index, scope_type, directly_index, parent_index});
             }
         }
 
-        output_debug("Local scope is created.", local_scope.size());
+        output_message("Local scope is created.", local_scope.size());
 
         int local_stack_index = 0;
         bool inside_flag = 0; // 0:外部, 1:関数内/クラス内, 2:グローバルスコープ
@@ -487,7 +488,7 @@ namespace Parser
                 local_scope[local_stack_index].addByteCode(ByteCodeLine(received_data[i]));
             }
         }
-        output_debug("Bytecode import is created.");
+        output_message("Bytecode import is created.");
 
         // バイトコードの実行
         process();
@@ -529,12 +530,6 @@ namespace Parser
         }
 
         throw std::runtime_error("Error: Local scope is not found.");
-    }
-
-    void ParserSystem::stop(bool p)
-    {
-        permission_proceed = p;
-        // ここで強制停止処理を行う
     }
 
     void ParserSystem::all_output_local_scope()
@@ -608,7 +603,17 @@ namespace Parser
             std::map<String, LocalVariable> attributes = dn.getAttributes();
             for (auto itr = attributes.begin(); itr != attributes.end(); ++itr)
             {
-                output_debug("-        Attribute", {itr->first, itr->second.getCastString()});
+                output_debug("-        Attribute", {itr->first, String(itr->second.getType()), itr->second.getCastString()});
+
+                // さらに中にMapがあるので展開
+                if (itr->second.getType() == Bytecode::Opecode::d_json)
+                {
+                    std::map<String, LocalVariable> map_value = itr->second.getMapValue();
+                    for (auto itr2 = map_value.begin(); itr2 != map_value.end(); ++itr2)
+                    {
+                        output_debug("-            Map Value", {itr2->first, String(itr2->second.getType()), itr2->second.getCastString()});
+                    }
+                }
             }
             vint children = dn.getChildren();
             for (int j = 0; j < children.size(); j++)

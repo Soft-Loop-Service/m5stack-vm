@@ -21,15 +21,18 @@ void try_parse()
 {
   try
   {
+    output_debug("try_parse");
     parser->refresh(receivedData);
+    output_debug("try_parse2");
     parser->parser();
+    output_debug("try_parse3");
   }
   catch (const std::runtime_error &e)
   {
     std::ostringstream *errer_message = new std::ostringstream();
     *errer_message << "Caught a runtime_error: " << e.what() << std::endl;
 
-    output_debug(String(errer_message->str().c_str()));
+    output_message(String(errer_message->str().c_str()));
     parser->all_output_local_scope();
     parser->all_output_call_stack_system();
   }
@@ -37,13 +40,13 @@ void try_parse()
   {
     std::ostringstream *errer_message = new std::ostringstream();
     *errer_message << "Caught a standard exception: " << e.what() << std::endl;
-    output_debug(String(errer_message->str().c_str()));
+    output_message(String(errer_message->str().c_str()));
   }
   catch (...)
   {
     std::ostringstream *errer_message = new std::ostringstream();
     *errer_message << "Caught an unknown exception" << std::endl;
-    output_debug(String(errer_message->str().c_str()));
+    output_message(String(errer_message->str().c_str()));
   }
 }
 
@@ -82,25 +85,24 @@ void processLine(String line)
     {
       try_parse();
 
-      output_debug("Parser is completed.");
+      output_message("Parser is completed.");
       return;
     }
     else if (tokens[0] == "##lcd_clear")
     {
       output_lcd_clear();
-      output_debug("lcd_clear is completed.");
+      output_message("lcd_clear is completed.");
       return;
     }
     else if (tokens[0] == "##code_clear")
     {
       receivedData.clear();
-      output_debug("code_clear is completed.");
+      output_message("code_clear is completed.");
       return;
     }
     else if (tokens[0] == "##debug_mode")
     {
-
-      output_debug("debug_mode mode is implemented.");
+      output_message("debug_mode mode is implemented.");
       output_debug_mode(tokens[1].toInt());
       return;
     }
@@ -120,12 +122,7 @@ void processLine(String line)
       parser->all_output_opecode_stack_system();
       return;
     }
-    else if (tokens[0] == "##stop_program")
-    {
-      parser->stop(false);
 
-      return;
-    }
     else if (tokens[0] == "##debug")
     {
       for (const auto &line : receivedData)
@@ -141,7 +138,7 @@ void processLine(String line)
     }
     else if (tokens[0] == "##")
     {
-      output_debug("Command is not found.");
+      output_message("Command is not found.");
       return;
     };
   }

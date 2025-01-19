@@ -9,6 +9,11 @@ int message_all_count = 0;
 // 2 : full CLI
 int is_debug_mode_level = 2;
 
+int get_debug_mode_level()
+{
+    return is_debug_mode_level;
+}
+
 void output_debug(String message, vint message_int)
 {
     if (is_debug_mode_level != 2)
@@ -100,10 +105,7 @@ void output_message(String message, vint message_int)
 }
 void output_message(String message, int message_int)
 {
-    if (is_debug_mode_level < 1)
-    {
-        return;
-    }
+
     message += " ";
     message += String(message_int);
     message += " ";
@@ -114,10 +116,7 @@ void output_message(String message, int message_int)
 
 void output_message(String message, vstring message_vstring)
 {
-    if (is_debug_mode_level < 1)
-    {
-        return;
-    }
+
     for (int i = 0; i < message_vstring.size(); i++)
     {
         message += " ";
@@ -130,10 +129,7 @@ void output_message(String message, vstring message_vstring)
 
 void output_message(String message)
 {
-    if (is_debug_mode_level < 1)
-    {
-        return;
-    }
+
     message_list.push_back(message);
     send_debug_message(message);
     output_debug_common();
@@ -141,10 +137,7 @@ void output_message(String message)
 
 void output_message(vstring v_message)
 {
-    if (is_debug_mode_level < 1)
-    {
-        return;
-    }
+
     // 連結して送信
     String message = "";
     for (int i = 0; i < v_message.size(); i++)
@@ -169,6 +162,11 @@ void output_lcd_clear()
 
 void output_debug_common()
 {
+    if (is_debug_mode_level == 0)
+    {
+        return;
+    }
+
     int max_size = 28;
 
     if (is_debug_mode_level > 0)

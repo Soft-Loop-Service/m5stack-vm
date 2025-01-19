@@ -413,6 +413,30 @@ namespace Parser
             return mapValue->at(name);
         }
 
+        int getValueCastInt()
+        {
+            if (store_type == INT)
+            {
+                return intValue;
+            }
+            else if (store_type == FLOAT)
+            {
+                return (int)floatValue;
+            }
+            else if (store_type == BOOLEAN)
+            {
+                return booleanValue ? 1 : 0;
+            }
+            else if (store_type == STRING)
+            {
+                return stringValue->toInt();
+            }
+            else
+            {
+                throw std::runtime_error("Error: Type is not matched.");
+            }
+        }
+
         String getCastString()
         {
             if (!hasStoreTypeMap(opcr_type))

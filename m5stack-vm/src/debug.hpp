@@ -5,6 +5,8 @@
 #include "./definition.hpp"
 #include <stdexcept>
 
+int get_debug_mode_level();
+
 void output_debug(String, vint);
 void output_debug(String, int);
 void output_debug(String);

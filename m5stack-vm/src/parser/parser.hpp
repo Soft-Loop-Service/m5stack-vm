@@ -6,7 +6,10 @@
 #include <sstream>
 #include "./../debug.hpp"
 
+#include "./renderer.hpp"
 #include "./dom_tree.hpp"
+#include <stdexcept>
+
 // フラットパーサー
 
 namespace Parser
@@ -257,7 +260,7 @@ namespace Parser
 
         DOM_Tree::DomSystem *dom_system;
 
-        int permission_proceed;
+        DOM_Renderer::Renderer *dom_renderer;
 
     public:
         ParserSystem();
@@ -290,8 +293,6 @@ namespace Parser
 
         void recursionProcess();
         void process();
-
-        void stop(bool);
 
         void all_output_local_scope();
         void all_output_opecode_stack_system();

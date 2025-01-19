@@ -1,7 +1,7 @@
 #include "./parser.hpp"
 #include "./../debug.hpp"
 #include "./../built_in/built_function.hpp"
-#include "M5Core2.h"
+#include <M5Core2.h>
 #include <stdexcept>
 #include "./local_variable.hpp"
 
@@ -34,10 +34,6 @@ namespace Parser
         for (int i = p_current_call_stack->getReturnPoint(); i < current_bytecode.size(); i++)
         {
             output_debug_memory();
-            if (permission_proceed == false)
-            {
-                return;
-            }
 
             Bytecode::opcr opcode = current_bytecode[i].getOpecode();
 
@@ -951,14 +947,11 @@ namespace Parser
         call_stack_system->push(CallStackScope(local_scope[0], 0));
         while (call_stack_system->has())
         {
-            if (permission_proceed == false)
-            {
-                stop(true);
-                return;
-            }
-
             recursionProcess();
         }
+
+        dom_renderer = new DOM_Renderer::Renderer(dom_system->getDomTree());
+        dom_renderer->rendering();
 
         output_message("Process is ended.");
     }

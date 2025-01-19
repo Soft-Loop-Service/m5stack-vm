@@ -11,7 +11,7 @@
 #include <map>
 #include <algorithm>
 #include <fstream>
-#include "M5Core2.h"
+#include <M5Core2.h>
 #include <regex>
 
 typedef std::vector<String> vstring;
@@ -42,7 +42,8 @@ inline void canConvertToIntTry(String str)
 {
     if (!canConvertToInt(str))
     {
-        throw std::runtime_error("Error: Cannot convert to int.");
+        String m = "Error: Cannot convert to int." + str;
+        throw std::runtime_error(m.c_str());
     }
 }
 
@@ -50,7 +51,8 @@ inline void canConvertToFloatTry(String str)
 {
     if (!canConvertToFloat(str))
     {
-        throw std::runtime_error("Error: Cannot convert to float.");
+        String m = "Error: Cannot convert to float." + str;
+        throw std::runtime_error(m.c_str());
     }
 }
 

@@ -9,8 +9,10 @@
 
 namespace Parser
 {
+
     namespace DOM_Tree
     {
+
         class DomNode
         {
         private:
@@ -46,6 +48,9 @@ namespace Parser
             std::vector<int> getChildren();
             std::map<String, LocalVariable> getAttributes();
             LocalVariable getAttribute(String);
+
+            bool hasAttribute(String key);
+
             int getParentIndex();
             void setDomIndex(int);
             void setParentIndex(int);
@@ -56,7 +61,6 @@ namespace Parser
             void setOpecodeStackLen(int);
             int getOpecodeStackLen();
         };
-
         class DomSystem
         {
             std::vector<DomNode> dom_tree;
@@ -85,6 +89,7 @@ namespace Parser
             int domSize();
         };
     };
+
 };
 
 #endif

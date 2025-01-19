@@ -1,4 +1,5 @@
 #include "dom_tree.hpp"
+#include "renderer.hpp"
 
 namespace Parser
 {
@@ -115,6 +116,11 @@ namespace Parser
             return this->call_stack_len;
         }
 
+        bool DomNode::hasAttribute(String key)
+        {
+            return this->attributes.find(key) != this->attributes.end();
+        }
+
         DomSystem::DomSystem()
         {
             this->select_index = 0;
@@ -177,5 +183,6 @@ namespace Parser
         {
             return this->dom_tree.size();
         }
+
     };
 };
