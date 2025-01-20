@@ -77,7 +77,8 @@ namespace Parser
             Renderer();
             Renderer(std::vector<DOM_Tree::DomNode>);
             void rendering();
-            RenderingDomNode rendering(int, RenderingDomNode);
+            void m5stackViewConfig(std::map<String, LocalVariable> style_map);
+            RenderingDomNode rendering(int, RenderingDomNode, std::map<String, LocalVariable>);
         };
     };
 } // namespace Parser

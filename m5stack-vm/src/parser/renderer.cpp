@@ -29,23 +29,70 @@ namespace Parser
 
             Serial.println("Rendering is started.");
             RenderingDomNode rdn(0, 0, 0, 0);
-            rendering(0, rdn);
+            std::map<String, LocalVariable> style_map = {};
+            rendering(0, rdn, style_map);
 
             Serial.println("Rendering is completed.");
         }
+        void Renderer::m5stackViewConfig(std::map<String, LocalVariable> style_map)
+        {
+            if (get_debug_mode_level() != 0)
+            {
+                return;
+            }
 
-        RenderingDomNode Renderer::rendering(int index, RenderingDomNode rdn)
+            if (style_map.find("color") != style_map.end())
+            {
+
+                M5.Lcd.setTextColor(color_map[style_map["color"].getValueString()]);
+            }
+            if (style_map.find("font") != style_map.end())
+            {
+
+                M5.Lcd.setTextFont(style_map["font"].getValueCastInt());
+            }
+            if (style_map.find("fontSize") != style_map.end())
+            {
+                int size = style_map["fontSize"].getValueCastInt();
+
+                M5.Lcd.setTextSize(size);
+            }
+        }
+
+        RenderingDomNode Renderer::rendering(int index, RenderingDomNode rdn, std::map<String, LocalVariable> style_map)
         {
             Serial.printf("REND |  %d* * * * \n", index);
 
+            if (dom_tree[index].hasAttribute("style"))
+            {
+                LocalVariable style = dom_tree[index].getAttribute("style");
+                if (style.getType() == Bytecode::Opecode::d_json)
+                {
+                    style_map.merge(style.getMapValue());
+                }
+                else if (style.getType() == Bytecode::Opecode::d_pair)
+                {
+                    // style_map = {style.getPairValue()};
+                    auto p = style.getPairValue();
+                    style_map[p.first] = p.second;
+                }
+                else
+                {
+                    Serial.printf("REND | STTYLE-A-1 %d %d %d\n", index, dom_tree.size(), style.getType());
+                }
+            }
+
+            m5stackViewConfig(style_map);
+
             for (int i = 0; i < dom_tree[index].getChildren().size(); i++)
             {
-                RenderingDomNode rv_rdn = rendering(dom_tree[index].getChildren()[i], rdn);
+                RenderingDomNode rv_rdn = rendering(dom_tree[index].getChildren()[i], rdn, style_map);
                 rdn.x += rv_rdn.width;
                 rdn.y += rv_rdn.height;
                 rdn.width = rv_rdn.width;
                 rdn.height = rv_rdn.height;
             }
+            m5stackViewConfig(style_map);
 
             Serial.printf("REND | RDN %d %d %d %d %d \n", index, rdn.x, rdn.y, rdn.width, rdn.height);
 
@@ -57,23 +104,6 @@ namespace Parser
                 LocalVariable style = dom_tree[index].getAttribute("style");
 
                 Serial.printf("REND | STTYLE-2 %d %d %d\n", index, dom_tree.size(), style.getType());
-
-                // style map valueの中身をSerialで出力
-
-                std::map<String, LocalVariable> style_map;
-
-                if (style.getType() == Bytecode::Opecode::d_json)
-                {
-                    style_map = style.getMapValue();
-                }
-                else if (style.getType() == Bytecode::Opecode::d_pair)
-                {
-                    style_map = {style.getPairValue()};
-                }
-                else
-                {
-                    Serial.printf("REND | STTYLE-2-1 %d %d %d\n", index, dom_tree.size(), style.getType());
-                }
 
                 Serial.printf("REND | STTYLE-2-2 %d %d %d\n", index, dom_tree.size(), style_map.size());
 
@@ -107,28 +137,10 @@ namespace Parser
                         M5.Lcd.fillRect(rdn.x, rdn.y, rdn.width, rdn.height, color_map[style_map["backgroundColor"].getValueString()]);
                     }
                 }
-                if (style_map.find("color") != style_map.end())
-                {
-                    if (get_debug_mode_level() == 0)
-                    {
-                        M5.Lcd.setTextColor(color_map[style_map["color"].getValueString()]);
-                    }
-                }
-                if (style_map.find("font") != style_map.end())
-                {
-                    if (get_debug_mode_level() == 0)
-                    {
-                        M5.Lcd.setTextFont(style_map["font"].getValueCastInt());
-                    }
-                }
+
                 if (style_map.find("fontSize") != style_map.end())
                 {
                     int size = style_map["fontSize"].getValueCastInt();
-
-                    if (get_debug_mode_level() == 0)
-                    {
-                        M5.Lcd.setTextSize(size);
-                    }
 
                     std::pair<int, int> size_x_y = font_size_map[size];
                     rdn.width = size_x_y.first;

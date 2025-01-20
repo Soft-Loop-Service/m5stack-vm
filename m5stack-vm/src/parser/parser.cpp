@@ -267,8 +267,6 @@ namespace Parser
         call_stack_system = new StackSystem<CallStackScope>();
         opecode_stack_system = new StackSystem<LocalVariable>();
         class_scope = {};
-
-        dom_system = new DOM_Tree::DomSystem();
     }
     ParserSystem::ParserSystem(SourceCode rd)
     {
@@ -276,8 +274,6 @@ namespace Parser
         local_scope = {};
         call_stack_system = new StackSystem<CallStackScope>();
         opecode_stack_system = new StackSystem<LocalVariable>();
-
-        dom_system = new DOM_Tree::DomSystem();
 
         class_scope = {};
     }

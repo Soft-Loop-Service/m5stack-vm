@@ -989,6 +989,8 @@ namespace Parser
         output_message("Process is started.");
 
         call_stack_system->push(CallStackScope(local_scope[0], 0));
+        dom_system = new DOM_Tree::DomSystem();
+
         while (call_stack_system->has())
         {
             recursionProcess();
